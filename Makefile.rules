@@ -1,0 +1,93 @@
+#############################################################################
+# Generic makefile
+#############################################################################
+
+host=$(shell uname -n)
+comma:= ,
+column:= :
+empty:=
+space:= $(empty) $(empty)
+
+BIN				 = multipole
+SRCDIRS			 =
+VPATH			 = $(subst $(space),$(column),$(SRCDIRS) )
+
+SOURCES			 = $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.cpp))
+NAMES			 = $(subst .cpp,,$(SOURCES) )
+BASENAMES		 = $(notdir $(NAMES) )
+OBJ				 = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
+
+INCLUDES		 = $(addprefix -I./, $(SRCDIRS) . )
+LIBS			 = -L./$(build_dir)
+
+#############################################################################
+# Tools
+RM				 = rm -f
+CONSOLE			 = konsole --vt_sz 73x41 --noclose -e
+# CONSOLE			 = konsole --noclose -e
+VALGRIND		 = valgrind
+MEMCHECK		 = $(VALGRIND) --tool=memcheck --leak-check=full
+CACHEGRIND		 = $(VALGRIND) --tool=callgrind
+#############################################################################
+
+a: all
+b: all
+l: all
+all: $(BIN)
+
+o: $(OBJ)
+
+# Linking
+$(BIN): $(OBJ)
+	$(LD) $(LDFLAGS) $(LIBS) $(OBJ) $(EXTRA_LIBS) -o $(BIN)
+
+# Compilation of source files, depends on ALL headers
+$(build_dir)/%.o : %.cpp $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.hpp))
+	$(CPP) $(strip $(CXXFLAGS)) $(INCLUDES) -c $< -o $@
+
+
+# Clean the project
+.PHONY: c clean
+c: clean
+clean: clean_bin clean_obj
+
+# Clean the project of the executable
+.PHONY: cb clean_bin
+cb: clean_bin
+clean_bin:
+	$(RM) $(BIN)
+
+# Clean the project of object files
+.PHONY: co clean_obj
+co: clean_obj
+clean_obj:
+	find . -name "*.o" -exec $(RM) {} \;
+	find . -name "*.gcda" -exec $(RM) {} \;
+	find . -name "*.gcno" -exec $(RM) {} \;
+
+# Clean the project of everything
+.PHONY: d distclean
+d: distclean
+distclean: clean_bin clean_obj clean_data
+
+# Run the program
+.PHONY: r run
+r: run
+run: $(BIN)
+	./$(BIN)
+
+# Run through valgrind for errors
+.PHONY: valgrind v
+v: valgrind
+valgrind:
+	$(MEMCHECK) ./$(BIN)
+.PHONY: cachegrind cg
+cg: cachegrind
+cachegrind:
+	$(CACHEGRIND) ./$(BIN)
+
+# Run through gdb for debugging
+.PHONY: g gdb
+g: gdb
+gdb: $(BIN)
+	gdb --quiet $(BIN)
