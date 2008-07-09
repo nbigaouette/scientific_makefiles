@@ -39,7 +39,7 @@ o: $(OBJ)
 
 # Linking
 $(BIN): $(OBJ)
-	$(LD) $(LDFLAGS) $(OBJ) -o $(BIN)
+	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
 # Compilation of source files, depends on ALL headers
 $(build_dir)/%.o : %.cpp $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.hpp))
