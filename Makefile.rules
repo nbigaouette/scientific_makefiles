@@ -8,17 +8,17 @@ column:= :
 empty:=
 space:= $(empty) $(empty)
 
-BIN				 = multipole
-SRCDIRS			 =
 VPATH			 = $(subst $(space),$(column),$(SRCDIRS) )
-
-SOURCES			 = $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.cpp))
+SOURCES			 = $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.cpp ) )
 NAMES			 = $(subst .cpp,,$(SOURCES) )
 BASENAMES		 = $(notdir $(NAMES) )
 OBJ				 = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
 
 INCLUDES		 = $(addprefix -I./, $(SRCDIRS) . )
-LIBS			 = -L./$(build_dir)
+LDFLAGS			 = -L./$(build_dir)
+
+# Include if necessary
+include Makefile.tinyxml
 
 #############################################################################
 # Tools
@@ -39,17 +39,17 @@ o: $(OBJ)
 
 # Linking
 $(BIN): $(OBJ)
-	$(LD) $(LDFLAGS) $(LIBS) $(OBJ) $(EXTRA_LIBS) -o $(BIN)
+	$(LD) $(LDFLAGS) $(OBJ) -o $(BIN)
 
 # Compilation of source files, depends on ALL headers
 $(build_dir)/%.o : %.cpp $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.hpp))
-	$(CPP) $(strip $(CXXFLAGS)) $(INCLUDES) -c $< -o $@
+	$(CPP) $(strip $(CXXFLAGS) $(INCLUDES)) -c $< -o $@
 
 
 # Clean the project
 .PHONY: c clean
 c: clean
-clean: clean_bin clean_obj
+clean: clean_bin clean_obj clean_doc
 
 # Clean the project of the executable
 .PHONY: cb clean_bin
@@ -62,19 +62,35 @@ clean_bin:
 co: clean_obj
 clean_obj:
 	find . -name "*.o" -exec $(RM) {} \;
-	find . -name "*.gcda" -exec $(RM) {} \;
-	find . -name "*.gcno" -exec $(RM) {} \;
+	find . -name "*.a" -exec $(RM) {} \;
+	find . -name "*.so" -exec $(RM) {} \;
+
+# Clean the project of documentation files
+.PHONY: clean_doc
+clean_doc:
+	rm -fr doc/*
 
 # Clean the project of everything
 .PHONY: d distclean
 d: distclean
-distclean: clean_bin clean_obj clean_data
+distclean: clean_bin clean_obj clean_data clean_doc
 
 # Run the program
 .PHONY: r run
 r: run
 run: $(BIN)
 	./$(BIN)
+
+# Count the number of lines of project, without tinyxml files
+.PHONY: count
+count:
+	wc -l $(addsuffix .*, $(NAMES) )
+
+# Build doxygen documentation
+.PHONY: doxygen doc
+doc: doxygen
+doxygen:
+	doxygen
 
 # Run through valgrind for errors
 .PHONY: valgrind v
