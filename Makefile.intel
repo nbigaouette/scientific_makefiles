@@ -1,9 +1,10 @@
 #############################################################################
 # Makefile for building using icc (Intel's C compiler)
+# Default: debug  & serial
 CC				:= icc
 CFLAGS			 = -no-gcc    # Does not compile otherwise
 CFLAGS			+= -O0 -g
-# CFLAGS			+= -Wall -w2 -wn1    # Debug
+# CFLAGS			+= -Wall -w2 -wn1
 LDFLAGS			:= -lm -static -no-gcc
 
 #############################################################################

@@ -159,6 +159,7 @@ cachegrind:
 g: gdb
 gdb: $(BIN)
 	gdb --quiet $(BIN)
+
 #############################################################################
 # Target depending on the binary. Necessary for the previous
 # lines "ifneq ($(filter ..." to work.
