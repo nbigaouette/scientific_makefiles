@@ -2,10 +2,12 @@
 # Makefile for building using icc (Intel's C compiler)
 # Default: debug  & serial
 CC				:= icc
-CFLAGS			 = -no-gcc    # Does not compile otherwise
+CFLAGS			 = 
+#CFLAGS			+= -no-gcc        # Might not be needed
 CFLAGS			+= -O0 -g
-# CFLAGS			+= -Wall -w2 -wn1
-LDFLAGS			:= -lm -static -no-gcc
+CFLAGS			+= -Wall -w2 -wn1
+LDFLAGS			:= -lm -no-gcc
+#LDFLAGS			+= -no-gcc    # Might not be needed
 
 #############################################################################
 # Call "make optimized" for optimized compilation
