@@ -6,6 +6,8 @@
 # Project options
 BIN				 = treecode
 SRCDIRS			 = src
+SRCEXT			 = cc
+HEADEXT			 = h
 
 # Include the generic rules
 include Makefile.rules

@@ -55,9 +55,9 @@ empty:=
 space:= $(empty) $(empty)
 
 VPATH			 = $(subst $(space),$(column),$(SRCDIRS) )
-# SOURCES			 = $(sort $(subst src/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.c ) ) ) )
-SOURCES			 = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.c ) ) )
-NAMES			 = $(subst .c,,$(SOURCES) )
+# SOURCES			 = $(sort $(subst src/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) ) )
+SOURCES			 = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) )
+NAMES			 = $(subst .$(SRCEXT),,$(SOURCES) )
 BASENAMES		 = $(notdir $(NAMES) )
 OBJ				 = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
 
@@ -89,7 +89,7 @@ $(BIN): $(OBJ)
 	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
 # Compilation of source files, depends on ALL headers
-$(build_dir)/%.o : %.c $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.h))
+$(build_dir)/%.o : %.$(SRCEXT) $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(HEADEXT)))
 	$(CC) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
 
