@@ -1,5 +1,51 @@
 #############################################################################
 # Generic makefile
+# Build using GCC with debug info by default.
+# Usage:
+#     make [target(s)]
+# Possible compilation targets:
+#     optimized (Optimized compilation)
+#     intel     (Compilation with intel compiler)
+#     parallel  (Parallel compilation)
+#     prof      (Profiling compilation)
+# For GNU Make
+# http://www.gnu.org/software/make/manual/make.html
+# Nicolas Bigaouette, July 2008
+#############################################################################
+
+#############################################################################
+# By default, build using GCC (gcc or g++) with debug information
+CC				 = gcc
+LD				 = $(CC)
+build_dir		 = build
+CFLAGS			 = -O0 -g -Wall -Wfatal-errors
+LDFLAGS			 =
+MPILOC			 =
+#############################################################################
+# Call "make optimized" for optimized compilation
+ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
+	CFLAGS		:= -O3
+endif
+#############################################################################
+# Call "make prof" for profiling
+ifneq ($(filter prof, $(MAKECMDGOALS) ),)
+	CFLAGS		+= -pg
+	LDFLAGS		+= -pg
+endif
+#############################################################################
+# Call "make intel" for building using icc (Intel's C compiler)
+ifneq ($(filter intel, $(MAKECMDGOALS) ),)
+	include Makefile.intel
+endif
+#############################################################################
+# Call "make parallel" for parallel compilation
+ifneq ($(filter parallel, $(MAKECMDGOALS) ),)
+	CC			:= $(MPILOC)mpicc
+	CPP			:= $(MPILOC)mpiCC
+	LD			:= $(CC)
+	CFLAGS		+= -DPARALLEL
+	LDFLAGS		+= -lmpi
+endif
 #############################################################################
 
 host=$(shell uname -n)
@@ -9,16 +55,17 @@ empty:=
 space:= $(empty) $(empty)
 
 VPATH			 = $(subst $(space),$(column),$(SRCDIRS) )
-SOURCES			 = $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.cpp ) )
-NAMES			 = $(subst .cpp,,$(SOURCES) )
+# SOURCES			 = $(sort $(subst src/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.c ) ) ) )
+SOURCES			 = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.c ) ) )
+NAMES			 = $(subst .c,,$(SOURCES) )
 BASENAMES		 = $(notdir $(NAMES) )
 OBJ				 = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
 
-INCLUDES		 = $(addprefix -I./, $(SRCDIRS) . )
+INCLUDES		 = $(addprefix -I./, $(SRCDIRS) )
 LDFLAGS			 = -L./$(build_dir)
 
 # Include if necessary
-include Makefile.tinyxml
+# include Makefile.tinyxml
 
 #############################################################################
 # Tools
@@ -42,8 +89,8 @@ $(BIN): $(OBJ)
 	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
 # Compilation of source files, depends on ALL headers
-$(build_dir)/%.o : %.cpp $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.hpp))
-	$(CPP) $(strip $(CXXFLAGS) $(INCLUDES)) -c $< -o $@
+$(build_dir)/%.o : %.c $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.h))
+	$(CC) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
 
 # Clean the project
@@ -70,6 +117,11 @@ clean_obj:
 clean_doc:
 	rm -fr doc/*
 
+.PHONY: cd clean_dat
+cd: clean_dat
+clean_dat:
+	rm -f *.dat output/*
+
 # Clean the project of everything
 .PHONY: d distclean
 d: distclean
@@ -84,7 +136,7 @@ run: $(BIN)
 # Count the number of lines of project, without tinyxml files
 .PHONY: count
 count:
-	wc -l $(addsuffix .*, $(NAMES) )
+	wc -l $(addprefix $(SRCDIRS)/, $(addsuffix .*, $(NAMES) ) )
 
 # Build doxygen documentation
 .PHONY: doxygen doc
@@ -107,3 +159,15 @@ cachegrind:
 g: gdb
 gdb: $(BIN)
 	gdb --quiet $(BIN)
+#############################################################################
+# Target depending on the binary. Necessary for the previous
+# lines "ifneq ($(filter ..." to work.
+intel: $(BIN)
+parallel: $(BIN)
+optimized: $(BIN)
+prof: $(BIN)
+
+# Force target
+force: ;
+
+############ End of file ####################################################

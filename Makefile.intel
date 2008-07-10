@@ -1,0 +1,24 @@
+#############################################################################
+# Makefile for building using icc (Intel's C compiler)
+CC				:= icc
+CFLAGS			 = -no-gcc    # Does not compile otherwise
+CFLAGS			+= -O0 -g
+# CFLAGS			+= -Wall -w2 -wn1    # Debug
+LDFLAGS			:= -lm -static -no-gcc
+
+#############################################################################
+# Call "make optimized" for optimized compilation
+ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
+	CFLAGS			:= -no-gcc -O3 -w1 -ipo
+endif
+#############################################################################
+# Call "make prof" for profiling
+ifneq ($(filter prof, $(MAKECMDGOALS) ),)
+	CFLAGS		+= -pg
+	LDFLAGS		+= -pg
+endif
+#############################################################################
+# MPI location
+MPILOC			:= /usr/lib/intel/openmpi/bin/
+
+############ End of file ####################################################

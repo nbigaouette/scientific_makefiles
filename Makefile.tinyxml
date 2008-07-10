@@ -19,7 +19,7 @@ VPATH			+= $(subst $(space),$(column),$(TINYXML_SRCDIR))
 INCLUDES		+= $(addprefix -I./, $(TINYXML_SRCDIR) )
 OBJ				+= $(TINYXML_OBJ)
 
-TINYXML_CXXFLAGS= $(CXXFLAGS)
+TINYXML_CXXFLAGS = $(CXXFLAGS)
 
 $(build_dir)/tiny%.o : $(TINYXML_SRCDIR)/tiny%.cpp
 	$(CPP) $(strip $(TINYXML_CXXFLAGS)) $(INCLUDES) -c $< -o $@
