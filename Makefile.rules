@@ -33,6 +33,12 @@ ifneq ($(filter prof, $(MAKECMDGOALS) ),)
 	LDFLAGS		+= -pg
 endif
 #############################################################################
+# Call "make cov" for coverage
+ifneq ($(filter cov, $(MAKECMDGOALS) ),)
+	CFLAGS		+= -fprofile-arcs -ftest-coverage
+	LDFLAGS		+= -fprofile-arcs -ftest-coverage
+endif
+#############################################################################
 # Call "make intel" for building using icc (Intel's C compiler)
 ifneq ($(filter intel, $(MAKECMDGOALS) ),)
 	include Makefile.intel
@@ -167,6 +173,7 @@ intel: $(BIN)
 parallel: $(BIN)
 optimized: $(BIN)
 prof: $(BIN)
+cov: $(BIN)
 
 # Force target
 force: ;
