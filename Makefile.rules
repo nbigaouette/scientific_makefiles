@@ -62,7 +62,7 @@ BASENAMES		 = $(notdir $(NAMES) )
 OBJ				 = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
 
 INCLUDES		 = $(addprefix -I./, $(SRCDIRS) )
-LDFLAGS			 = -L./$(build_dir)
+LDFLAGS			+= -L./$(build_dir)
 
 # Include if necessary
 # include Makefile.tinyxml
