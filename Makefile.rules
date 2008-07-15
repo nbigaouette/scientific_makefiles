@@ -73,6 +73,14 @@ LDFLAGS			+= -L./$(build_dir)
 # Include if necessary
 # include Makefile.tinyxml
 
+ifeq ($(host),cerberus)
+include Makefile.cerberus
+endif
+
+ifeq ($(host),sflogin0)
+include Makefile.hpcvl
+endif
+
 #############################################################################
 # Tools
 RM				 = rm -f
@@ -114,9 +122,13 @@ clean_bin:
 .PHONY: co clean_obj
 co: clean_obj
 clean_obj:
-	find . -name "*.o" -exec $(RM) {} \;
-	find . -name "*.a" -exec $(RM) {} \;
-	find . -name "*.so" -exec $(RM) {} \;
+	$(RM) build/*
+# 	find . -iname "*.o" -exec $(RM) {} \;
+# 	find . -iname "*.a" -exec $(RM) {} \;
+# 	find . -iname "*.so" -exec $(RM) {} \;
+# 	find . -iname "*.gcda" -exec $(RM) {} \;
+# 	find . -iname "*.gcno" -exec $(RM) {} \;
+# 	find . -iname "*.il" -exec $(RM) {} \;
 
 # Clean the project of documentation files
 .PHONY: clean_doc

@@ -1,0 +1,33 @@
+#############################################################################
+# Makefile for building on HPCVL
+# Default: debug  & serial
+CC				:= cc
+LD				:= $(CC)
+CFLAGS			:= -g -O0 -Mbounds -Mchkfpstk -Mchkstk
+# CFLAGS			+= -Wall -w2 -wn1
+LDFLAGS			:=
+
+#############################################################################
+# Call "make optimized" for optimized compilation
+ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
+	CFLAGS			:= -O3
+endif
+#############################################################################
+# Call "make prof" for profiling
+ifneq ($(filter prof, $(MAKECMDGOALS) ),)
+	CFLAGS		+= -pg
+	LDFLAGS		+= -pg
+endif
+#############################################################################
+# MPI location
+MPILOC			:=
+#############################################################################
+# Call "make parallel" for parallel compilation
+ifneq ($(filter parallel, $(MAKECMDGOALS) ),)
+	CC			:= mpcc
+	LD			:= $(CC)
+	CFLAGS		+= -DPARALLEL
+	LDFLAGS		:= -Dparallel -lmpi
+endif
+
+############ End of file ####################################################

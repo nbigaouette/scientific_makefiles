@@ -1,0 +1,33 @@
+#############################################################################
+# Makefile for building using icc (Intel's C compiler)
+# Default: debug  & serial
+CC				:= icc
+LD				:= $(CC)
+CFLAGS			:= -O0 -g
+# CFLAGS			+= -Wall -w2 -wn1
+LDFLAGS			:=
+
+#############################################################################
+# Call "make optimized" for optimized compilation
+ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
+	CFLAGS			:= -O3 -w1 -ipo
+	LDFLAGS			+= -ipo
+endif
+#############################################################################
+# Call "make prof" for profiling
+ifneq ($(filter prof, $(MAKECMDGOALS) ),)
+	CFLAGS		+= -pg
+	LDFLAGS		+= -pg
+endif
+#############################################################################
+# MPI location
+MPILOC			:=
+#############################################################################
+# Call "make parallel" for parallel compilation
+ifneq ($(filter parallel, $(MAKECMDGOALS) ),)
+	CFLAGS		+= -DPARALLEL -DMP_Lite -I/home/nicolas/programmes/opt/usr/include/
+	LDFLAGS		+= /home/nicolas/programmes/opt/lib/libmplite.a
+endif
+
+############ End of file ####################################################
+
