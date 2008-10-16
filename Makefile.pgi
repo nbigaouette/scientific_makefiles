@@ -21,6 +21,6 @@ ifneq ($(filter prof, $(MAKECMDGOALS) ),)
 endif
 #############################################################################
 # MPI location
-MPILOC			:= /usr/lib/intel/openmpi/bin/
+MPILOC			:= /usr/lib/pgi/openmpi/bin/
 
 ############ End of file ####################################################

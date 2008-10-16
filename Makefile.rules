@@ -6,6 +6,7 @@
 # Possible compilation targets:
 #     optimized (Optimized compilation)
 #     intel     (Compilation with intel compiler)
+#     pgi       (Compilation with PGI's compiler)
 #     parallel  (Parallel compilation)
 #     prof      (Profiling compilation)
 # For GNU Make
@@ -43,6 +44,11 @@ endif
 # Call "make intel" for building using icc (Intel's C compiler)
 ifneq ($(filter intel, $(MAKECMDGOALS) ),)
 	include Makefile.intel
+endif
+#############################################################################
+# Call "make pgi" for building using pgcc (Portland Group's C compiler)
+ifneq ($(filter pgi, $(MAKECMDGOALS) ),)
+	include Makefile.pgi
 endif
 #############################################################################
 # Call "make parallel" for parallel compilation
@@ -182,6 +188,7 @@ gdb: $(BIN)
 #############################################################################
 # Target depending on the binary. Necessary for the previous
 # lines "ifneq ($(filter ..." to work.
+pgi: $(BIN)
 intel: $(BIN)
 parallel: $(BIN)
 optimized: $(BIN)
