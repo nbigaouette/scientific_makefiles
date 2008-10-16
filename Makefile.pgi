@@ -1,0 +1,26 @@
+#############################################################################
+# Makefile for building using pgcc (Portland Group's C compiler)
+# Default: debug  & serial
+CC				:= pgcc
+CPP				:= pgCC
+CFLAGS			 =
+CFLAGS			+= -O0 -g
+CFLAGS			+= -Mbounds -Ktrap=fp -Mchkfpstk -Mchkstk
+LDFLAGS			:= -fPIC
+
+#############################################################################
+# Call "make optimized" for optimized compilation
+ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
+	CFLAGS			:= -O3
+endif
+#############################################################################
+# Call "make prof" for profiling
+ifneq ($(filter prof, $(MAKECMDGOALS) ),)
+	CFLAGS		+=
+	LDFLAGS		+=
+endif
+#############################################################################
+# MPI location
+MPILOC			:= /usr/lib/intel/openmpi/bin/
+
+############ End of file ####################################################

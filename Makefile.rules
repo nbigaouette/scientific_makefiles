@@ -16,6 +16,7 @@
 #############################################################################
 # By default, build using GCC (gcc or g++) with debug information
 CC				 = gcc
+CPP				 = g++
 LD				 = $(CC)
 build_dir		 = build
 CFLAGS			 = -O0 -g -Wall -Wfatal-errors
