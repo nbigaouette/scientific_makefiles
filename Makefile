@@ -6,7 +6,7 @@
 # Project options
 BIN				 = treecode
 SRCDIRS			 = src
-SRCEXT			 = cc
+SRCEXT			 = c
 HEADEXT			 = h
 
 # Include the generic rules

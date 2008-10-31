@@ -62,6 +62,7 @@ endif
 #############################################################################
 
 host=$(shell uname -n)
+user=$(shell whoami)
 comma:= ,
 column:= :
 empty:=
