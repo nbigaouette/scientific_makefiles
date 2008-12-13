@@ -1,0 +1,71 @@
+#################################################################
+# Makefile for building with Sun Studio
+#     make sun studio7      Compilation with Sun Studio 7
+#     make sun studio11     Compilation with Sun Studio 11
+#     make sun studio12     Compilation with Sun Studio 12
+#
+
+CCPATH           =
+
+ifeq ($(host),sflogin0)
+    ### If on HPCVL...
+
+    ### Which Sun Studio to use
+    ifneq ($(filter studio7, $(MAKECMDGOALS) ),)
+        CCPATH          := /opt/studio7/SUNWspro/bin/
+    endif
+    ifneq ($(filter studio11, $(MAKECMDGOALS) ),)
+        CCPATH          := /opt/studio11/SUNWspro/bin/
+    endif
+    ifneq ($(filter studio12, $(MAKECMDGOALS) ),)
+        CCPATH          := /opt/studio12/SUNWspro/bin/
+    endif
+
+    ifeq ($(CCPATH),)
+        $(error "Please specifiy which Sun Studio compiler to use (studio7, studio11 of studio12)")
+    endif
+
+endif # ifeq ($(host),sflogin0)
+
+DESTDIRCOMPILER := sun
+CC              := $(CCPATH)suncc
+CPP             := $(CCPATH)sunCC
+CFLAGS          := -O0 -g -DYDEBUG
+
+
+
+LDFLAGS         :=
+OMP_CFLAGS      := -xopenmp
+OMP_LDFLAGS     := -xopenmp
+
+ifeq ($(host),sflogin0)
+    ### If on HPCVL...
+    MPILOC      := /opt/SUNWhpc/HPC8.1/sun/bin/
+    # -xcode=pic13  has no effect on Linux
+    CFLAGS      += -xcode=pic13
+    LDFLAGS     += -xcode=pic13
+endif
+
+#################################################################
+# Call "make optimized" for optimized compilation
+ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
+    CFLAGS      := -fast -DNDEBUG
+    ifeq ($(host),sflogin0)
+        ### If on HPCVL...
+        # -xcode=pic13  has no effect on Linux
+        CFLAGS  += -xcode=pic13
+        LDFLAGS += -xcode=pic13
+    endif
+endif
+
+#################################################################
+# FLAGS that should appear, whatever the compilation options
+CFLAGS          += -m64 -KPIC
+LDFLAGS         += -m64 -KPIC
+
+sun: $(BIN)
+studio7: $(BIN)
+studio11: $(BIN)
+studio12: $(BIN)
+
+############ End of file ########################################

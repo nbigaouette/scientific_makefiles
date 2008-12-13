@@ -1,20 +1,23 @@
-#############################################################################
+#################################################################
 # Main makefile
 # Please edit this makefile to adapt to your project.
-#############################################################################
+# Type "make help" for usage
+#################################################################
 
 # Project options
-BIN				 = treecode
-SRCDIRS			 = src
-SRCEXT			 = c
-HEADEXT			 = h
+BIN              = project_name
+SRCDIRS          = src
+SRCEXT           = cpp
+HEADEXT          = hpp
+# LANGUAGE         = C
+LANGUAGE         = CPP
 
 # Include the generic rules
-include Makefile.rules
+include makefiles/Makefile.rules
 
-#############################################################################
+#################################################################
 # Project specific options
-CFLAGS			+=
-LDFLAGS			+= -lm
+CFLAGS          +=
+LDFLAGS         +=
 
-############ End of file ####################################################
+############ End of file ########################################

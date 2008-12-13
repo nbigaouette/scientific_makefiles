@@ -1,65 +1,7 @@
-#############################################################################
+#################################################################
 # Generic makefile
-# Build using GCC with debug info by default.
-# Usage:
-#     make [target(s)]
-# Possible compilation targets:
-#     optimized (Optimized compilation)
-#     intel     (Compilation with intel compiler)
-#     pgi       (Compilation with PGI's compiler)
-#     parallel  (Parallel compilation)
-#     prof      (Profiling compilation)
-# For GNU Make
-# http://www.gnu.org/software/make/manual/make.html
 # Nicolas Bigaouette, July 2008
-#############################################################################
-
-#############################################################################
-# By default, build using GCC (gcc or g++) with debug information
-CC				 = gcc
-CPP				 = g++
-LD				 = $(CC)
-build_dir		 = build
-CFLAGS			 = -O0 -g -Wall -Wfatal-errors
-LDFLAGS			 =
-MPILOC			 =
-#############################################################################
-# Call "make optimized" for optimized compilation
-ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
-	CFLAGS		:= -O3
-endif
-#############################################################################
-# Call "make prof" for profiling
-ifneq ($(filter prof, $(MAKECMDGOALS) ),)
-	CFLAGS		+= -pg
-	LDFLAGS		+= -pg
-endif
-#############################################################################
-# Call "make cov" for coverage
-ifneq ($(filter cov, $(MAKECMDGOALS) ),)
-	CFLAGS		+= -fprofile-arcs -ftest-coverage
-	LDFLAGS		+= -fprofile-arcs -ftest-coverage
-endif
-#############################################################################
-# Call "make intel" for building using icc (Intel's C compiler)
-ifneq ($(filter intel, $(MAKECMDGOALS) ),)
-	include Makefile.intel
-endif
-#############################################################################
-# Call "make pgi" for building using pgcc (Portland Group's C compiler)
-ifneq ($(filter pgi, $(MAKECMDGOALS) ),)
-	include Makefile.pgi
-endif
-#############################################################################
-# Call "make parallel" for parallel compilation
-ifneq ($(filter parallel, $(MAKECMDGOALS) ),)
-	CC			:= $(MPILOC)mpicc
-	CPP			:= $(MPILOC)mpiCC
-	LD			:= $(CC)
-	CFLAGS		+= -DPARALLEL
-	LDFLAGS		+= -lmpi
-endif
-#############################################################################
+#################################################################
 
 host=$(shell uname -n)
 user=$(shell whoami)
@@ -68,36 +10,87 @@ column:= :
 empty:=
 space:= $(empty) $(empty)
 
-VPATH			 = $(subst $(space),$(column),$(SRCDIRS) )
-# SOURCES			 = $(sort $(subst src/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) ) )
-SOURCES			 = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) )
-NAMES			 = $(subst .$(SRCEXT),,$(SOURCES) )
-BASENAMES		 = $(notdir $(NAMES) )
-OBJ				 = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
+build_dir        = build
 
-INCLUDES		 = $(addprefix -I./, $(SRCDIRS) )
-LDFLAGS			+= -L./$(build_dir)
+#################################################################
+# Force printing of help if just "make" is called
+include makefiles/Makefile.help
+
+#################################################################
+# Call "make gcc" for building using GCC (gcc or g++)
+ifneq ($(filter gcc, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.gcc
+endif
+#################################################################
+# Call "make intel" for building using icc (Intel's C compiler)
+ifneq ($(filter intel, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.intel
+endif
+#################################################################
+# Call "make pgi" for building using pgcc (Portland Group's compiler)
+ifneq ($(filter pgi, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.pgi
+endif
+#################################################################
+# Call "make sun" for building using sunCC (Sun Studio 12)
+ifneq ($(filter sun, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.sunstudio
+endif
+
+#################################################################
+# Call "make ds" to include debug symbols (-g)
+ifneq ($(filter ds, $(MAKECMDGOALS) ),)
+    CFLAGS      += -g
+endif
+#################################################################
+# Call "make mpi" for MPI compilation
+ifneq ($(filter mpi, $(MAKECMDGOALS) ),)
+    CPP         := $(MPILOC)mpiCC
+    CC          := $(MPILOC)mpicc
+    CFLAGS      += -DPARALLEL_MPI
+    ifeq ($(host)),cerberus)
+        CFLAGS  += -DMP_Lite -I/home/$(user)/usr/include/
+        LDFLAGS += /home/$(user)/usr/lib/libmplite.a
+    endif
+
+endif
+#################################################################
+# Call "make omp" for OpenMP compilation
+ifneq ($(filter omp, $(MAKECMDGOALS) ),)
+    CFLAGS      += -DPARALLEL_OMP
+    CFLAGS      += $(OMP_CFLAGS)
+    LDFLAGS     += $(OMP_LDFLAGS)
+endif
+#################################################################
+
+COMPILER    := $(CC)
+ifeq ($(LANGUAGE),CPP)
+COMPILER    := $(CPP)
+endif
+LD          := $(COMPILER)
+
+VPATH            = $(subst $(space),$(column),$(SRCDIRS) )
+# SOURCES            = $(sort $(subst src/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) ) )
+SOURCES          = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) )
+NAMES            = $(subst .$(SRCEXT),,$(SOURCES) )
+BASENAMES        = $(notdir $(NAMES) )
+OBJ              = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
+
+INCLUDES         = $(addprefix -I./, $(SRCDIRS) )
+LDFLAGS         += -L./$(build_dir)
 
 # Include if necessary
-# include Makefile.tinyxml
+# include makefiles/Makefile.tinyxml
 
-ifeq ($(host),cerberus)
-include Makefile.cerberus
-endif
-
-ifeq ($(host),sflogin0)
-include Makefile.hpcvl
-endif
-
-#############################################################################
+#################################################################
 # Tools
-RM				 = rm -f
-CONSOLE			 = konsole --vt_sz 73x41 --noclose -e
-# CONSOLE			 = konsole --noclose -e
-VALGRIND		 = valgrind
-MEMCHECK		 = $(VALGRIND) --tool=memcheck --leak-check=full
-CACHEGRIND		 = $(VALGRIND) --tool=callgrind
-#############################################################################
+RM               = rm -f
+CONSOLE          = konsole --vt_sz 73x41 --noclose -e
+# CONSOLE            = konsole --noclose -e
+VALGRIND         = valgrind
+MEMCHECK         = $(VALGRIND) --tool=memcheck --leak-check=full --show-reachable=yes
+CACHEGRIND       = $(VALGRIND) --tool=callgrind
+#################################################################
 
 a: all
 b: all
@@ -112,7 +105,7 @@ $(BIN): $(OBJ)
 
 # Compilation of source files, depends on ALL headers
 $(build_dir)/%.o : %.$(SRCEXT) $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(HEADEXT)))
-	$(CC) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
+	$(COMPILER) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
 
 # Clean the project
@@ -131,12 +124,12 @@ clean_bin:
 co: clean_obj
 clean_obj:
 	$(RM) build/*
-# 	find . -iname "*.o" -exec $(RM) {} \;
-# 	find . -iname "*.a" -exec $(RM) {} \;
-# 	find . -iname "*.so" -exec $(RM) {} \;
-# 	find . -iname "*.gcda" -exec $(RM) {} \;
-# 	find . -iname "*.gcno" -exec $(RM) {} \;
-# 	find . -iname "*.il" -exec $(RM) {} \;
+#   find . -iname "*.o" -exec $(RM) {} \;
+#   find . -iname "*.a" -exec $(RM) {} \;
+#   find . -iname "*.so" -exec $(RM) {} \;
+#   find . -iname "*.gcda" -exec $(RM) {} \;
+#   find . -iname "*.gcno" -exec $(RM) {} \;
+#   find . -iname "*.il" -exec $(RM) {} \;
 
 # Clean the project of documentation files
 .PHONY: clean_doc
@@ -146,7 +139,7 @@ clean_doc:
 .PHONY: cd clean_dat
 cd: clean_dat
 clean_dat:
-	rm -f *.dat output/*
+	rm -fr *.dat output/*
 
 # Clean the project of everything
 .PHONY: d distclean
@@ -173,11 +166,13 @@ doxygen:
 # Run through valgrind for errors
 .PHONY: valgrind v
 v: valgrind
-valgrind:
+valgrind: $(BIN)
 	$(MEMCHECK) ./$(BIN)
+vv: $(BIN)
+	$(MEMCHECK) --verbose ./$(BIN)
 .PHONY: cachegrind cg
 cg: cachegrind
-cachegrind:
+cachegrind: $(BIN)
 	$(CACHEGRIND) ./$(BIN)
 
 # Run through gdb for debugging
@@ -186,17 +181,15 @@ g: gdb
 gdb: $(BIN)
 	gdb --quiet $(BIN)
 
-#############################################################################
+#################################################################
 # Target depending on the binary. Necessary for the previous
 # lines "ifneq ($(filter ..." to work.
-pgi: $(BIN)
-intel: $(BIN)
-parallel: $(BIN)
+mpi: $(BIN)
+omp: $(BIN)
 optimized: $(BIN)
-prof: $(BIN)
-cov: $(BIN)
+dg: force
 
 # Force target
 force: ;
 
-############ End of file ####################################################
+############ End of file ########################################
