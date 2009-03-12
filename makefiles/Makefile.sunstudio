@@ -7,7 +7,7 @@
 
 CCPATH           =
 
-ifeq ($(host),sflogin0)
+ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
     ### If on HPCVL...
 
     ### Which Sun Studio to use
@@ -25,7 +25,7 @@ ifeq ($(host),sflogin0)
         $(error "Please specifiy which Sun Studio compiler to use (studio7, studio11 of studio12)")
     endif
 
-endif # ifeq ($(host),sflogin0)
+endif # ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
 
 DESTDIRCOMPILER := sun
 CC              := $(CCPATH)suncc
@@ -34,38 +34,60 @@ CFLAGS          := -O0 -g -DYDEBUG
 
 
 
-LDFLAGS         :=
+RPATH           := -Rpath,
+LibMath         := -lm
+LDFLAGS         := $(RPATH)/opt/sunstudio12/rtlibs/amd64
 OMP_CFLAGS      := -xopenmp
 OMP_LDFLAGS     := -xopenmp
 
-ifeq ($(host),sflogin0)
+ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
     ### If on HPCVL...
-    MPILOC      := /opt/SUNWhpc/HPC8.1/sun/bin/
-    # -xcode=pic13  has no effect on Linux
-    CFLAGS      += -xcode=pic13
-    LDFLAGS     += -xcode=pic13
+    ifeq ($(host),xenakis)
+        HPC_version := 7.1
+    else
+        HPC_version := 8.2/sun
+    endif
+    MPILOC      := /opt/SUNWhpc/HPC$(HPC_version)/bin/
 endif
 
 #################################################################
 # Call "make optimized" for optimized compilation
 ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
-    CFLAGS      := -fast -DNDEBUG
-    ifeq ($(host),sflogin0)
-        ### If on HPCVL...
-        # -xcode=pic13  has no effect on Linux
-        CFLAGS  += -xcode=pic13
-        LDFLAGS += -xcode=pic13
-    endif
+    #CFLAGS      := -fast -DNDEBUG
+    CFLAGS      := -O3 -DNDEBUG
+    LDFLAGS     := -O3 -DNDEBUG
 endif
 
 #################################################################
 # FLAGS that should appear, whatever the compilation options
-CFLAGS          += -m64 -KPIC
-LDFLAGS         += -m64 -KPIC
+CFLAGS          += -m64
+LDFLAGS         += -m64
+
+# Create "position independant" code on x86_64 or SPARC
+ifeq ($(arch),x86_64)
+    CFLAGS      += -Kpic
+    LDFLAGS     += -Kpic
+endif
+ifeq ($(arch),sun4u)
+    # Should be faster:
+    #CFLAGS      += -xcode=pic13
+    #LDFLAGS     += -xcode=pic13
+
+    # But if ld complains with:
+    # ld: fatal: too many symbols require `small' PIC references:
+    #    have 1213, maximum 1024 -- recompile some modules -K PIC.
+    CFLAGS      += -xcode=pic32
+    LDFLAGS     += -xcode=pic32
+endif
+
+#################################################################
+# Flags to build a shared object (library) should be the same
+# as CFLAGS plus -G
+LIB_OPTIONS     := -G $(CFLAGS)
 
 sun: $(BIN)
-studio7: $(BIN)
-studio11: $(BIN)
-studio12: $(BIN)
+studio7: force
+studio11: force
+studio12: force
 
 ############ End of file ########################################

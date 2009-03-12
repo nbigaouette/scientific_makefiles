@@ -25,6 +25,11 @@ help: force
 	@echo ""
 	@echo "See GNU Make:"
 	@echo "http://www.gnu.org/software/make/manual/make.html"
+	@echo ""
+	@echo "Example:"
+	@echo "> make clean gcc optimized run"
+	@echo "This will clean, compile using gcc and optimized flags"
+	@echo "the code and run it."
 
 details: help
 	@echo ""

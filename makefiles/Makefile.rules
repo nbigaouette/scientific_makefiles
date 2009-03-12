@@ -4,7 +4,14 @@
 #################################################################
 
 host=$(shell uname -n)
+arch=$(shell uname -m)
+os=$(shell uname)
+ifeq ($(os),SunOS)
+user=$(shell /usr/ucb/whoami)
+else
 user=$(shell whoami)
+endif
+PWD=$(shell pwd)
 comma:= ,
 column:= :
 empty:=
@@ -32,6 +39,11 @@ ifneq ($(filter pgi, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.pgi
 endif
 #################################################################
+# Call "make pathscale" for building using pathCC (Pathscale's compiler)
+ifneq ($(filter pathscale, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.pathscale
+endif
+#################################################################
 # Call "make sun" for building using sunCC (Sun Studio 12)
 ifneq ($(filter sun, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.sunstudio
@@ -45,14 +57,15 @@ endif
 #################################################################
 # Call "make mpi" for MPI compilation
 ifneq ($(filter mpi, $(MAKECMDGOALS) ),)
+    CFLAGS      += -DPARALLEL_MPI
+ifeq ($(filter pathscale, $(MAKECMDGOALS) ),)
     CPP         := $(MPILOC)mpiCC
     CC          := $(MPILOC)mpicc
-    CFLAGS      += -DPARALLEL_MPI
     ifeq ($(host)),cerberus)
         CFLAGS  += -DMP_Lite -I/home/$(user)/usr/include/
         LDFLAGS += /home/$(user)/usr/lib/libmplite.a
     endif
-
+endif
 endif
 #################################################################
 # Call "make omp" for OpenMP compilation
@@ -85,18 +98,37 @@ LDFLAGS         += -L./$(build_dir)
 #################################################################
 # Tools
 RM               = rm -f
-CONSOLE          = konsole --vt_sz 73x41 --noclose -e
-# CONSOLE            = konsole --noclose -e
+CONSOLE          = xterm -hold -e
+#CONSOLE          = konsole --vt_sz 73x41 --noclose -e
+#CONSOLE          = konsole --vt_sz 73x41 --noclose -e
+#CONSOLE            = konsole --noclose -e
+DEBUGGER         = gdb
 VALGRIND         = valgrind
 MEMCHECK         = $(VALGRIND) --tool=memcheck --leak-check=full --show-reachable=yes
 CACHEGRIND       = $(VALGRIND) --tool=callgrind
+ifeq ($(NP),)
+ifneq ($(np),)
+NP=$(np)
+endif
+endif
 #################################################################
 
+HPCVL_MACHINES   = sflogin0 xenakis
+SHARCNET_MACHINES= bul124 narwhal305
+
+LINK_PREFERED    = shared
+# Link statically on clusters
+ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
+LINK_PREFERED    = static
+endif
+
+.PHONY: a b l all
 a: all
 b: all
 l: all
 all: $(BIN)
 
+.PHONY: o
 o: $(OBJ)
 
 # Linking
@@ -152,6 +184,19 @@ r: run
 run: $(BIN)
 	./$(BIN)
 
+# Run the parallel program
+.PHONY: p rp pr
+rp: p
+pr: p
+p:
+	mpirun -np $(NP) ./$(BIN)
+pk:
+	mpirun -np $(NP) $(CONSOLE) ./$(BIN)
+pkd:
+	mpirun -np $(NP) $(CONSOLE) $(DEBUGGER) ./$(BIN)
+pkv:
+	mpirun -np $(NP) $(CONSOLE) $(VALGRIND) ./$(BIN)
+
 # Count the number of lines of project, without tinyxml files
 .PHONY: count
 count:
@@ -164,7 +209,7 @@ doxygen:
 	doxygen
 
 # Run through valgrind for errors
-.PHONY: valgrind v
+.PHONY: valgrind v vv
 v: valgrind
 valgrind: $(BIN)
 	$(MEMCHECK) ./$(BIN)
@@ -184,12 +229,14 @@ gdb: $(BIN)
 #################################################################
 # Target depending on the binary. Necessary for the previous
 # lines "ifneq ($(filter ..." to work.
+.PHONY: mpi omp optimized dg
 mpi: $(BIN)
 omp: $(BIN)
 optimized: $(BIN)
 dg: force
 
 # Force target
+.PHONY: force
 force: ;
 
 ############ End of file ########################################

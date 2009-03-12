@@ -1,28 +1,23 @@
 #################################################################
-# Makefile for building using GCC (gcc or g++)
+# Makefile for building using pathCC (Pathscale's compiler)
 # Default: debug  & serial
+DESTDIRCOMPILER := pathscale
+CC              := pathcc
+CPP             := pathCC
+CFLAGS          := -O0 -g -Wall -fullwarn -DYDEBUG
 
-ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
-COMP_LOC         = /opt/csw/gcc4/bin/
-endif
 
-DESTDIRCOMPILER := gcc
-CC               = $(COMP_LOC)gcc
-CPP              = $(COMP_LOC)g++
-CFLAGS           = -O0 -g -DYDEBUG -Wno-write-strings
-CFLAGS          += -Wall -Wfatal-errors
-
-RPATH           := -Wl,-rpath,
-
+RPATH           := -Wl,-rpath=
 LibMath         := -lm
 LDFLAGS         :=
-OMP_CFLAGS       = -fopenmp
-OMP_LDFLAGS      = -fopenmp
+OMP_CFLAGS      := -mp
+OMP_LDFLAGS     := -mp
 
 #################################################################
 # Call "make optimized" for optimized compilation
 ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
-    CFLAGS      := -O3 -Wno-write-strings -DNDEBUG
+    CFLAGS      := -O3 -ipa -OPT:Ofast -fno-math-errno -TENV:simd_zmask=OFF -TENV:simd_imask=OFF -TENV:simd_omask=OFF -DNDEBUG
+    LDFLAGS     := $(CFLAGS)
 endif
 #################################################################
 # Call "make prof" for profiling
@@ -31,22 +26,22 @@ ifneq ($(filter prof, $(MAKECMDGOALS) ),)
     LDFLAGS     += -pg
 endif
 #################################################################
-# Call "make cov" for coverage
-ifneq ($(filter cov, $(MAKECMDGOALS) ),)
-    CFLAGS      += -fprofile-arcs -ftest-coverage
-    LDFLAGS     += -fprofile-arcs -ftest-coverage
+# Call "make mpi" for MPI compilation
+ifneq ($(filter mpi, $(MAKECMDGOALS) ),)
+ifeq ($(host),bul124)
+#ifeq ($(host),nar316)
+    CC          := pathcc
+    CPP         := pathCC
+    CFLAGS      += -I/opt/hpmpi/include
+    LDFLAGS     += -L/opt/hpmpi/lib/linux_amd64 -lmpiCC -lhpmpio -lhpmpi -L/opt/hpmpi/lib/linux_amd64 -lmpi
 endif
-
+endif
 #################################################################
 # MPI location
-MPILOC          :=
+MPILOC          := /usr/lib/$(DESTDIRCOMPILER)/openmpi/bin/
 
-# Create "position independant" code on x86_64 or SPARC
+# Create "position independant" code on x86_64
 ifeq ($(arch),x86_64)
-    CFLAGS      += -fPIC
-    LDFLAGS     += -fPIC
-endif
-ifeq ($(arch),sun4u)
     CFLAGS      += -fPIC
     LDFLAGS     += -fPIC
 endif
@@ -56,8 +51,6 @@ endif
 # as CFLAGS plus -shared
 LIB_OPTIONS     := -shared $(CFLAGS)
 
-gcc: $(BIN)
-prof: gcc
-cov: gcc
+pathscale: $(BIN)
 
 ############ End of file ########################################
