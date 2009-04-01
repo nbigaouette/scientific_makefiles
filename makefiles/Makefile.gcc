@@ -56,7 +56,12 @@ endif
 # as CFLAGS plus -shared
 LIB_OPTIONS     := -shared $(CFLAGS)
 
+# Detect if compilation for library
+ifneq ($(LIB),)
+gcc: force
+else
 gcc: $(BIN)
+endif
 prof: gcc
 cov: gcc
 

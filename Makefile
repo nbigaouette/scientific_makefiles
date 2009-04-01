@@ -5,12 +5,15 @@
 #################################################################
 
 # Project options
+#LIB              = lib_name
 BIN              = project_name
 SRCDIRS          = src
 SRCEXT           = cpp
 HEADEXT          = hpp
 # LANGUAGE         = C
 LANGUAGE         = CPP
+# TESTDIRS         = testing
+# TESTMAIN         = $(TESTDIRS)/test_name
 
 # Include the generic rules
 include makefiles/Makefile.rules
@@ -20,6 +23,7 @@ include makefiles/Makefile.rules
 CFLAGS          +=
 LDFLAGS         +=
 
-
+# Include the library stuff
+# include makefiles/Makefile.library
 
 ############ End of file ########################################

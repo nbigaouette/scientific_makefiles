@@ -19,6 +19,8 @@ space:= $(empty) $(empty)
 
 build_dir        = build
 
+HEADERS          = $(wildcard $(addsuffix *.$(HEADEXT),$(addsuffix /, $(SRCDIRS)) ) )
+
 #################################################################
 # Force printing of help if just "make" is called
 include makefiles/Makefile.help
