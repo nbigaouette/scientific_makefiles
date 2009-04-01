@@ -234,7 +234,12 @@ gdb: $(BIN)
 .PHONY: mpi omp optimized dg
 mpi: $(BIN)
 omp: $(BIN)
+# Detect if compilation for library
+ifneq ($(LIB),)
+optimized: force
+else
 optimized: $(BIN)
+endif
 dg: force
 
 # Force target
