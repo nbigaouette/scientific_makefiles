@@ -15,11 +15,6 @@ TESTMAIN_BASENAME = $(subst $(TESTDIRS)/,,$(TESTMAIN))
 f:
 	$(MAKE) shared static install $(filter-out f, $(MAKECMDGOALS) )
 
-test:
-	# TEST_BASENAMES = $(TEST_BASENAMES)
-	# TEST_OBJ = $(TEST_OBJ)
-	# LIB_OBJ = $(LIB_OBJ)
-
 ### Compilation of main() ###
 $(build_dir)/$(TESTMAIN_BASENAME).o:
 	$(COMPILER) -c $(strip $(CFLAGS) $(INCLUDES)) -o $(build_dir)/$(TESTMAIN_BASENAME).o $(TESTMAIN).$(SRCEXT)
@@ -76,6 +71,21 @@ ifeq ($(DESTDIR),)
         DESTDIR := /home/$(user)/usr
     endif
 endif
+DESTDIR         := $(abspath $(DESTDIR) )
+
+# If installing into home directory, we do not need sudo
+ifeq ($(findstring /home/$(user),$(abspath $(DESTDIR))),/home/$(user))
+SUDO            :=
+endif
+
+test:
+	# abspath ..: $(abspath ../usr)
+	# abspath home: $(abspath /home/nicolas/usr)
+	# Find: $(findstring /home/$(user),$(abspath $(DESTDIR)))
+#	# TEST_BASENAMES = $(TEST_BASENAMES)
+#	# TEST_OBJ = $(TEST_OBJ)
+#	# LIB_OBJ = $(LIB_OBJ)
+#	# DESTDIR = $(DESTDIR)
 
 ### If installing to "/home/...", we don't need sudo
 ifneq ($(findstring /home/$(user),$(DESTDIR) ),)
