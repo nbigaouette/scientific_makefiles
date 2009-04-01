@@ -21,6 +21,9 @@ build_dir        = build
 
 HEADERS          = $(wildcard $(addsuffix *.$(HEADEXT),$(addsuffix /, $(SRCDIRS)) ) )
 
+HPCVL_MACHINES   = sflogin0 xenakis
+SHARCNET_MACHINES= bul124 narwhal305
+
 #################################################################
 # Force printing of help if just "make" is called
 include makefiles/Makefile.help
@@ -114,9 +117,6 @@ NP=$(np)
 endif
 endif
 #################################################################
-
-HPCVL_MACHINES   = sflogin0 xenakis
-SHARCNET_MACHINES= bul124 narwhal305
 
 LINK_PREFERED    = shared
 # Link statically on clusters
