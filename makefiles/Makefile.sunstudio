@@ -35,7 +35,8 @@ CFLAGS          := -O0 -g -DYDEBUG
 
 
 RPATH           := -Rpath,
-LibMath         := -lm
+#LibMath         := -lm
+LibMath         := -lmopt
 LDFLAGS         := $(RPATH)/opt/sunstudio12/rtlibs/amd64
 OMP_CFLAGS      := -xopenmp
 OMP_LDFLAGS     := -xopenmp
