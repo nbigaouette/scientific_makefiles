@@ -135,7 +135,7 @@ all: $(BIN)
 o: $(OBJ)
 
 # Linking
-$(BIN): $(OBJ)
+$(BIN): $(OBJ) cb
 	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
 # Compilation of source files, depends on ALL headers
