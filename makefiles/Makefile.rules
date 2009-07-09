@@ -29,6 +29,11 @@ SHARCNET_MACHINES= bul124 narwhal305
 include makefiles/Makefile.help
 
 #################################################################
+# Call "make sharcnet" for building SHARCNET
+ifneq ($(filter sharcnet, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.sharcnet
+endif
+#################################################################
 # Call "make gcc" for building using GCC (gcc or g++)
 ifneq ($(filter gcc, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.gcc
@@ -107,7 +112,7 @@ CONSOLE          = xterm -hold -e
 #CONSOLE          = konsole --vt_sz 73x41 --noclose -e
 #CONSOLE          = konsole --vt_sz 73x41 --noclose -e
 #CONSOLE            = konsole --noclose -e
-DEBUGGER         = gdb
+DEBUGGER         = gdb --quiet --args
 VALGRIND         = valgrind
 MEMCHECK         = $(VALGRIND) --tool=memcheck --leak-check=full --show-reachable=yes
 CACHEGRIND       = $(VALGRIND) --tool=callgrind
@@ -117,6 +122,12 @@ NP=$(np)
 endif
 endif
 NP ?= 2
+ifneq ($(NAME),)
+NAME_ARGUMENT   = --name $(NAME)
+endif
+ifneq ($(INPUT),)
+INPUT_ARGUMENT  = --input $(INPUT)
+endif
 #################################################################
 
 LINK_PREFERED    = shared
@@ -185,25 +196,25 @@ distclean: clean_bin clean_obj clean_data clean_doc
 .PHONY: r run
 r: run
 run: $(BIN)
-	./$(BIN)
+	./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 
 # Run the parallel program
 .PHONY: p rp pr
 rp: p
 pr: p
 p:
-	mpirun -np $(NP) ./$(BIN)
+	mpirun -np $(NP) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 pk:
-	mpirun -np $(NP) $(CONSOLE) ./$(BIN)
+	mpirun -np $(NP) $(CONSOLE) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 pkd:
-	mpirun -np $(NP) $(CONSOLE) $(DEBUGGER) ./$(BIN)
+	mpirun -np $(NP) $(CONSOLE) $(DEBUGGER) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 pkv:
-	mpirun -np $(NP) $(CONSOLE) $(VALGRIND) ./$(BIN)
+	mpirun -np $(NP) $(CONSOLE) $(VALGRIND) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 
 # Count the number of lines of project, without tinyxml files
 .PHONY: count
 count:
-	wc -l $(addprefix $(SRCDIRS)/, $(addsuffix .*, $(NAMES) ) )
+	wc -l $(addsuffix /*, $(filter-out src/tinyxml, $(SRCDIRS)))
 
 # Build doxygen documentation
 .PHONY: doxygen doc
@@ -215,19 +226,19 @@ doxygen:
 .PHONY: valgrind v vv
 v: valgrind
 valgrind: $(BIN)
-	$(MEMCHECK) ./$(BIN)
+	$(MEMCHECK) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 vv: $(BIN)
-	$(MEMCHECK) --verbose ./$(BIN)
+	$(MEMCHECK) --verbose ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 .PHONY: cachegrind cg
 cg: cachegrind
 cachegrind: $(BIN)
-	$(CACHEGRIND) ./$(BIN)
+	$(CACHEGRIND) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 
 # Run through gdb for debugging
 .PHONY: g gdb
 g: gdb
 gdb: $(BIN)
-	gdb --quiet $(BIN)
+	$(DEBUGGER) $(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 
 #################################################################
 # Target depending on the binary. Necessary for the previous

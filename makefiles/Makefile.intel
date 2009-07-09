@@ -5,10 +5,12 @@ DESTDIRCOMPILER := intel
 CC              := icc
 CPP             := icpc
 CFLAGS          := -O0 -g -DYDEBUG -Wall -w2 -wn1
-# CFLAGS          += -wd981   # remark #981: operands are evaluated in unspecified order
-# CFLAGS          += -wd1419  # remark #1419: external declaration in primary source file
-# CFLAGS          += -wd869   # remark #869: parameter "???" was never referenced
-# CFLAGS          += -wd1418  # remark #1418: external function definition with no prior declaration
+CFLAGS          += -wd981   # remark #981: operands are evaluated in unspecified order
+CFLAGS          += -wd1419  # remark #1419: external declaration in primary source file
+CFLAGS          += -wd869   # remark #869: parameter "???" was never referenced
+CFLAGS          += -wd1418  # remark #1418: external function definition with no prior declaration
+CFLAGS          += -wd383   # remark #383: value copied to temporary, reference to temporary used
+CFLAGS          += -wd161   # warning #161: unrecognized #pragma
 
 RPATH           := -Wl,-rpath,
 
@@ -20,19 +22,14 @@ OMP_LDFLAGS     := -openmp
 #################################################################
 # Call "make optimized" for optimized compilation
 ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
-    CFLAGS      := -O3 -w1 -DNDEBUG
-    LDFLAGS     := -O3 -w1
-    # Building a library with IPO won't work, only for binaries
-    # (-fast includes -ipo)
-    ifneq ($(LIB),)
-    CFLAGS      += -ipo -fast
-    LDFLAGS     += -ipo -fast
-    endif
-    # Remove warnings:
+    CFLAGS      := -O3 -w1 -ipo -DNDEBUG -Wall
+    LDFLAGS     := -O3 -w1 -ipo
     CFLAGS      += -wd981   # remark #981: operands are evaluated in unspecified order
     CFLAGS      += -wd1419  # remark #1419: external declaration in primary source file
     CFLAGS      += -wd869   # remark #869: parameter "???" was never referenced
     CFLAGS      += -wd1418  # remark #1418: external function definition with no prior
+    CFLAGS      += -wd383   # remark #383: value copied to temporary, reference to temporary used
+    CFLAGS      += -wd161   # warning #161: unrecognized #pragma
 endif
 #################################################################
 # MPI location
