@@ -11,6 +11,17 @@ CC               = $(COMP_LOC)gcc
 CPP              = $(COMP_LOC)g++
 CFLAGS           = -O0 -g -DYDEBUG -Wno-write-strings
 CFLAGS          += -Wall -Wfatal-errors
+CFLAGS          += -std=c++98
+CFLAGS          += -pedantic
+CFLAGS          += -Wall -Wextra
+CFLAGS          += -Wformat=2 -Wno-format-extra-args -Wformat-security -Wformat-nonliteral
+CFLAGS          += -Wuninitialized -Winit-self
+CFLAGS          += -Wmissing-include-dirs -Wfloat-equal -Wshadow -Wunsafe-loop-optimizations -Wconversion -Wlogical-op -Winline
+# CFLAGS          += -Wpadded
+# CFLAGS          += -Wunreachable-code
+# CFLAGS          += -Weffc++
+CFLAGS          += -Wno-unused-parameter # Disable: "warning: unused parameter [...]"
+CFLAGS          += -Wno-unknown-pragmas
 
 RPATH           := -Wl,-rpath,
 
@@ -22,7 +33,8 @@ OMP_LDFLAGS      = -fopenmp
 #################################################################
 # Call "make optimized" for optimized compilation
 ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
-    CFLAGS      := -O3 -Wno-write-strings -DNDEBUG
+    CFLAGS      := -O3 -Wno-write-strings -march=native -DNDEBUG
+    CFLAGS      += -ftree-vectorizer-verbose=1
 endif
 #################################################################
 # Call "make prof" for profiling

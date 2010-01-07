@@ -6,10 +6,15 @@
 host=$(shell uname -n)
 arch=$(shell uname -m)
 os=$(shell uname)
+whoami = "whoami"
 ifeq ($(os),SunOS)
-user=$(shell /usr/ucb/whoami)
-else
-user=$(shell whoami)
+    GNU = g
+    ifeq ($(wildcard /usr/ucb/whoami),/usr/ucb/whoami)
+        user=$(shell /usr/ucb/whoami)
+    endif
+    ifeq ($(wildcard /usr/gnu/bin/whoami),/usr/gnu/bin/whoami)
+        user=$(shell /usr/gnu/bin/whoami)
+    endif
 endif
 PWD=$(shell pwd)
 comma:= ,
@@ -72,8 +77,8 @@ ifeq ($(filter pathscale, $(MAKECMDGOALS) ),)
     CPP         := $(MPILOC)mpiCC
     CC          := $(MPILOC)mpicc
     ifeq ($(host)),cerberus)
-        CFLAGS  += -DMP_Lite -I/home/$(user)/usr/include/
-        LDFLAGS += /home/$(user)/usr/lib/libmplite.a
+        CFLAGS  += -DMP_Lite -I$(HOME)/usr/include/
+        LDFLAGS += $(HOME)/usr/lib/libmplite.a
     endif
 endif
 endif
@@ -107,6 +112,7 @@ LDFLAGS         += -L./$(build_dir)
 
 #################################################################
 # Tools
+SOFTLIMIT        = softlimit -a 500000000
 RM               = rm -f
 CONSOLE          = xterm -hold -e
 #CONSOLE          = konsole --vt_sz 73x41 --noclose -e
@@ -157,7 +163,7 @@ $(build_dir)/%.o : %.$(SRCEXT) $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(
 # Clean the project
 .PHONY: c clean
 c: clean
-clean: clean_bin clean_obj clean_doc
+clean: clean_bin clean_obj
 
 # Clean the project of the executable
 .PHONY: cb clean_bin
@@ -196,7 +202,7 @@ distclean: clean_bin clean_obj clean_data clean_doc
 .PHONY: r run
 r: run
 run: $(BIN)
-	./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
 
 # Run the parallel program
 .PHONY: p rp pr

@@ -12,7 +12,7 @@ LDFLAGS         :=
 OMP_CFLAGS      := -mp
 OMP_LDFLAGS     := -mp
 
-CFLAGS          += -I/home/$(user)/usr/include
+CFLAGS          += -I$(HOME)/usr/include
 
 #################################################################
 # Call "make pathscale" to force pathscale compilation
