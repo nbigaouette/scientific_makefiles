@@ -220,7 +220,7 @@ pkv:
 # Count the number of lines of project, without tinyxml files
 .PHONY: count
 count:
-	wc -l $(addsuffix /*, $(filter-out src/tinyxml, $(SRCDIRS)))
+	wc -l $(addsuffix /*, $(filter-out src/dSFMT, $(filter-out src/tinyxml, $(SRCDIRS))))
 
 # Build doxygen documentation
 .PHONY: doxygen doc
