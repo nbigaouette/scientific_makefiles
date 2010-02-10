@@ -16,7 +16,7 @@
 # Project options
 #LIB              = lib_name
 BIN              = project_name
-SRCDIRS          = src
+SRCDIR           = src
 SRCEXT           = cpp
 HEADEXT          = hpp
 # LANGUAGE         = C
