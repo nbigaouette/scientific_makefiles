@@ -46,6 +46,11 @@ ifneq ($(filter gcc, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.gcc
 endif
 #################################################################
+# Call "make gcc" for building using LLVM's Clang (clang or clang++)
+ifneq ($(filter clang, $(MAKECMDGOALS) ),)
+    include makefiles/Makefile.clang
+endif
+#################################################################
 # Call "make intel" for building using icc (Intel's C compiler)
 ifneq ($(filter intel, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.intel
@@ -124,6 +129,7 @@ DEBUGGER         = gdb --quiet --args
 VALGRIND         = valgrind
 MEMCHECK         = $(VALGRIND) --tool=memcheck --leak-check=full --show-reachable=yes
 CACHEGRIND       = $(VALGRIND) --tool=callgrind
+GIT              = git
 ifeq ($(NP),)
 ifneq ($(np),)
 NP=$(np)
@@ -204,7 +210,7 @@ distclean: clean_bin clean_obj clean_data clean_doc
 .PHONY: r run
 r: run
 run: $(BIN)
-	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) | tee output/make_run.log
 
 # Run the parallel program
 .PHONY: p rp pr
