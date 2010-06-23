@@ -159,7 +159,17 @@ all: $(BIN)
 .PHONY: o
 o: $(OBJ)
 
+# Git revision is saved in src/Version.cpp. Only used for Git.
+#.PHONE: version
+#version: src/Version.cpp
+#src/Version.cpp: force
+#	echo "#include \"Version.hpp\"" > src/Version.cpp
+#	echo "const char *build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
+#	echo "const char *build_branch = \"`$(GIT) branch | grep "*" | sed "s|* ||g"`\";" >> src/Version.cpp
+#	echo "const char *build_time = \"`date`\";" >> src/Version.cpp
+
 # Linking
+#$(BIN): version $(OBJ) cb
 $(BIN): $(OBJ) cb
 	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
