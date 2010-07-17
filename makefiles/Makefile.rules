@@ -165,7 +165,8 @@ o: $(OBJ)
 #src/Version.cpp: force
 #	echo "#include \"Version.hpp\"" > src/Version.cpp
 #	echo "const char *build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
-#	echo "const char *build_branch = \"`$(GIT) branch | grep "*" | sed "s|* ||g"`\";" >> src/Version.cpp
+#	echo "const char *build_branch = \"`$(GIT) name-rev --name-only HEAD`\";" >> src/Version.cpp
+##	echo "const char *build_branch = \"`$(GIT) branch | grep "*" | sed "s|* ||g"`\";" >> src/Version.cpp
 #	echo "const char *build_time = \"`date`\";" >> src/Version.cpp
 
 # Linking
