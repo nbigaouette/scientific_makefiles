@@ -16,6 +16,7 @@ ifeq ($(os),SunOS)
         user=$(shell /usr/gnu/bin/whoami)
     endif
 endif
+user=$(shell $(whoami) )
 PWD=$(shell pwd)
 comma:= ,
 column:= :
@@ -29,7 +30,7 @@ build_dir        = build
 HEADERS          = $(foreach HEADEXTSION,$(HEADEXT),$(wildcard $(addsuffix *.$(HEADEXTSION),$(addsuffix /, $(SRCDIRS)) ) ) )
 
 HPCVL_MACHINES   = sflogin0 xenakis
-SHARCNET_MACHINES= bul124 narwhal305
+SHARCNET_MACHINES= bul124 narwhal305 bul narwhal wha hnd bal
 
 #################################################################
 # Force printing of help if just "make" is called
@@ -130,6 +131,8 @@ VALGRIND         = valgrind
 MEMCHECK         = $(VALGRIND) --tool=memcheck --leak-check=full --show-reachable=yes
 CACHEGRIND       = $(VALGRIND) --tool=callgrind
 GIT              = git
+GREP             = grep
+SED              = sed
 ifeq ($(NP),)
 ifneq ($(np),)
 NP=$(np)
@@ -148,7 +151,10 @@ LINK_PREFERED    = shared
 # Link statically on clusters
 ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
 LINK_PREFERED    = static
+GREP            := ggrep
+SED             := gsed
 endif
+
 
 .PHONY: a b l all
 a: all
@@ -165,17 +171,19 @@ o: $(OBJ)
 #src/Version.cpp: force
 #	echo "#include \"Version.hpp\"" > src/Version.cpp
 #	echo "const char *build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
-#	echo "const char *build_branch = \"`$(GIT) name-rev --name-only HEAD`\";" >> src/Version.cpp
-##	echo "const char *build_branch = \"`$(GIT) branch | grep "*" | sed "s|* ||g"`\";" >> src/Version.cpp
+#	echo "const char *build_branch = \"$(GIT_BRANCH)\";" >> src/Version.cpp
 #	echo "const char *build_time = \"`date`\";" >> src/Version.cpp
 
 # Linking
 #$(BIN): version $(OBJ) cb
 $(BIN): $(OBJ) cb
+	# ################################################################
+	# Linking...
+	# ################################################################
 	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
 # Compilation of source files, depends on ALL headers
-$(build_dir)/%.o : %.$(SRCEXT) $(HEADERS)
+$(build_dir)/%.o : %.$(SRCEXT) $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(HEADEXT)))
 	$(COMPILER) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
 
