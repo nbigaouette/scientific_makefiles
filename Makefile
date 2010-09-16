@@ -12,7 +12,8 @@
 # while [ 1 ]; do pmap -d `pidof project_name` | grep writeable | sed "s|K||g" | awk '{print ""$4" KiB    "$4/1024" MiB    "$4/1024/1024" GiB"}' ; sleep 0.1 ;done 2> /dev/null
 
 # Project options
-#LIB              = lib_name
+# Intel ICC sets LIB. Reset it here to make sure it's empty. Else code won't compile.
+LIB             :=
 BIN              = project_name
 SRCDIR           = src
 SRCEXT           = cpp
