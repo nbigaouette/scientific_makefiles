@@ -11,7 +11,7 @@ help: force
 	@echo "    gcc          GNU's GCC compiler set"
 	@echo "    intel        Intel's ICC compiler set"
 	@echo "    pgi          Portland Group compiler set"
-	@echo "    sun studioX  Sun's Studio compiler set (where X is 7,11 or 12)"
+	@echo "    sun studioX  Sun's Studio compiler set (where X is 7, 11 or 12)"
 	@echo "Possible compilation options:"
 ifneq ($(LIB),)
 	@echo "    shared       Build shared library"
