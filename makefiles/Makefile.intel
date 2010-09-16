@@ -51,6 +51,10 @@ endif
 # as CFLAGS plus -shared
 LIB_OPTIONS     := -shared $(CFLAGS)
 
+ifeq ($(LINK_PREFERED), static)
+LDFLAGS         += -static-intel
+endif
+
 GCC_MAJOR       := $(shell gcc -dumpversion | cut -d'.' -f1)
 GCC_MINOR       := $(shell gcc -dumpversion | cut -d'.' -f2)
 GCC_REV         := $(shell gcc -dumpversion | cut -d'.' -f3)
