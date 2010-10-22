@@ -283,16 +283,18 @@ gdb: $(BIN)
 #################################################################
 # Target depending on the binary. Necessary for the previous
 # lines "ifneq ($(filter ..." to work.
-.PHONY: mpi omp optimized dg
+.PHONY: mpi omp optimized dg ocl
 # Don't build a binary if what we are building is a library
 ifneq ($(LIB),)
 optimized: force
 mpi: force
 omp: force
+ocl: force
 else
 optimized: $(BIN)
 mpi: $(BIN)
 omp: $(BIN)
+ocl: $(BIN)
 endif
 dg: force
 
