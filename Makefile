@@ -15,13 +15,12 @@
 # Intel ICC sets LIB. Reset it here to make sure it's empty. Else code won't compile.
 LIB             :=
 BIN              = project_name
-SRCDIR           = src
+SRCDIRS          = src
+TESTDIRS         = unit_testing
 SRCEXT           = cpp
 HEADEXT          = hpp
 # LANGUAGE         = C
 LANGUAGE         = CPP
-# TESTDIRS         = testing
-# TESTMAIN         = $(TESTDIRS)/test_name
 
 # Include the generic rules
 include makefiles/Makefile.rules
