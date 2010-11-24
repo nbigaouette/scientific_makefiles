@@ -213,6 +213,17 @@ $(BIN): $(OBJ) cb
 $(build_dir)/%.o : %.$(SRCEXT) $(HEADERS)
 	$(COMPILER) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
+variables:
+	# BIN:           $(BIN)
+	# OBJ:           $(OBJ)
+	#
+	# HEADERS:       $(HEADERS)
+	# TESTDIR:       $(TESTDIR)
+	# SOURCES:       $(SOURCES)
+	# TEST_SOURCES:  $(TEST_SOURCES)
+	# TEST_NAMES:    $(TEST_NAMES)
+	# TEST_OBJ:      $(TEST_OBJ)
+
 
 # Clean the project
 .PHONY: c clean
