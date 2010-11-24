@@ -27,7 +27,7 @@ SRCDIRS = $(shell $(GNU)find $(SRCDIR) -type d)
 
 build_dir        = build
 
-HEADERS          = $(foreach HEADEXTSION,$(HEADEXT),$(wildcard $(addsuffix *.$(HEADEXTSION),$(addsuffix /, $(SRCDIRS)) ) ) )
+HEADERS          = $(wildcard $(addsuffix *.$(HEADEXT),$(addsuffix /, $(SRCDIRS)) ) )
 
 HPCVL_MACHINES   = sflogin0 xenakis
 SHARCNET_MACHINES= bul124 narwhal305 bul narwhal wha hnd bal
