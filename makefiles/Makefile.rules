@@ -113,7 +113,6 @@ endif
 LD          := $(COMPILER)
 
 VPATH            = $(subst $(space),$(column),$(SRCDIRS) )
-# SOURCES            = $(sort $(subst src/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) ) )
 SOURCES          = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) )
 NAMES            = $(subst .$(SRCEXT),,$(SOURCES) )
 BASENAMES        = $(notdir $(NAMES) )
@@ -121,9 +120,6 @@ OBJ              = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
 
 INCLUDES         = $(addprefix -I./, $(SRCDIRS) )
 LDFLAGS         += -L./$(build_dir)
-
-# Include if necessary
-# include makefiles/Makefile.tinyxml
 
 #################################################################
 # Tools
@@ -162,7 +158,6 @@ GREP            := ggrep
 SED             := gsed
 endif
 
-
 .PHONY: a b l all
 a: all
 b: all
@@ -180,6 +175,7 @@ o: $(OBJ)
 #	echo "const char *build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
 #	echo "const char *build_branch = \"$(GIT_BRANCH)\";" >> src/Version.cpp
 #	echo "const char *build_time = \"`date`\";" >> src/Version.cpp
+# Git revision is saved in src/Version.cpp. Only used for Git.
 
 #################################################################
 # Call "make test" for building test suite
@@ -313,14 +309,14 @@ gdb: $(BIN)
 .PHONY: mpi omp optimized dg ocl
 # Don't build a binary if what we are building is a library
 ifneq ($(LIB),)
-optimized: force
 mpi: force
 omp: force
+optimized: force
 ocl: force
 else
-optimized: $(BIN)
 mpi: $(BIN)
 omp: $(BIN)
+optimized: $(BIN)
 ocl: $(BIN)
 endif
 dg: force
