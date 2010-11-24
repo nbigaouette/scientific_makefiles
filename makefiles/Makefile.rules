@@ -213,6 +213,7 @@ $(BIN): $(OBJ) cb
 $(build_dir)/%.o : %.$(SRCEXT) $(HEADERS)
 	$(COMPILER) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
+.PHONY: variables
 variables:
 	# BIN:           $(BIN)
 	# OBJ:           $(OBJ)
