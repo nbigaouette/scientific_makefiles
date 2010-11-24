@@ -110,7 +110,6 @@ COMPILER    := $(CPP)
 endif
 LD          := $(COMPILER)
 
-VPATH            = $(subst $(space),$(column),$(SRCDIRS) )
 SOURCES          = $(subst $(SRCDIRS)/,,$(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) ) )
 NAMES            = $(subst .$(SRCEXT),,$(SOURCES) )
 BASENAMES        = $(notdir $(NAMES) )
