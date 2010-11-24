@@ -210,7 +210,7 @@ $(BIN): $(OBJ) cb
 	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
 
 # Compilation of source files, depends on ALL headers
-$(build_dir)/%.o : %.$(SRCEXT) $(foreach DIR,$(SRCDIRS) .,$(wildcard $(DIR)/*.$(HEADEXT)))
+$(build_dir)/%.o : %.$(SRCEXT) $(HEADERS)
 	$(COMPILER) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
 
 
