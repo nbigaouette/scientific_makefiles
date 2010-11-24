@@ -23,8 +23,6 @@ column:= :
 empty:=
 space:= $(empty) $(empty)
 
-SRCDIRS = $(shell $(GNU)find $(SRCDIR) -type d)
-
 build_dir        = build
 
 HEADERS          = $(wildcard $(addsuffix *.$(HEADEXT),$(addsuffix /, $(SRCDIRS)) ) )
