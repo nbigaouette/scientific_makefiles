@@ -58,6 +58,9 @@ endif
 # as CFLAGS plus -shared
 LIB_OPTIONS     := -shared $(CFLAGS)
 
+CFLAGS          += -DCLANG
+
+# http://llvm.org/bugs/show_bug.cgi?id=7069
 GCC_MAJOR       := $(shell gcc -dumpversion | cut -d'.' -f1)
 GCC_MINOR       := $(shell gcc -dumpversion | cut -d'.' -f2)
 GCC_REV         := $(shell gcc -dumpversion | cut -d'.' -f3)
