@@ -119,6 +119,43 @@ INCLUDES         = $(addprefix -I./, $(SRCDIRS) )
 LDFLAGS         += -L./$(build_dir)
 
 #################################################################
+# Generic section to for library inclusion
+# Call it like this:
+# $(eval $(call template_library, stdcout, ssh://optimusprime.selfip.net/git/nicolas/stdcout.git ) )
+define template_library
+	LibName         := $(1)
+	LibIncludes     := $$(HOME)/usr/include
+	ifeq ($$(DESTDIRCOMPILER),gcc)
+	LibLocation     := $$(HOME)/usr/lib
+	else
+	LibLocation     := $$(HOME)/usr/lib/$$(DESTDIRCOMPILER)
+	endif
+
+	### Check if the location exist. If not, try the /usr directoy
+	ifeq ($$(wildcard $$(LibLocation)/lib$$(LibName).*),)
+	LibIncludes     := /usr/include/$$(LibName)
+	ifeq ($$(DESTDIRCOMPILER),gcc)
+	LibLocation     := /usr/lib
+	else
+	LibLocation     := /usr/lib/$$(DESTDIRCOMPILER)
+	endif
+	endif
+
+	### If library is not found, bail out!
+	ifeq ($$(wildcard $$(LibLocation)/lib$$(LibName).*),)
+	$$(error ERROR: $$(LibName) could not be found in "$$(LibLocation)"! Please install it from $(2))
+	endif
+
+	### Add library flags
+	CFLAGS          += -I$$(LibIncludes)
+	ifeq ($$(LINK_PREFERED),shared)
+	LDFLAGS         += -L$$(LibLocation) -l$$(LibName) $$(RPATH)$$(LibLocation)
+	else # static
+	LDFLAGS         += $$(LibLocation)/lib$$(LibName).a
+	endif
+endef
+
+#################################################################
 # Tools
 SOFTLIMIT        = softlimit -a 500000000
 RM               = rm -f
