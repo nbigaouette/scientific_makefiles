@@ -119,40 +119,62 @@ INCLUDES         = $(addprefix -I./, $(SRCDIRS) )
 LDFLAGS         += -L./$(build_dir)
 
 #################################################################
-# Generic section to for library inclusion
-# Call it like this:
-# $(eval $(call template_library, stdcout, ssh://optimusprime.selfip.net/git/nicolas/stdcout.git ) )
-define template_library
-	LibName         := $(1)
-	LibIncludes     := $$(HOME)/usr/include
-	ifeq ($$(DESTDIRCOMPILER),gcc)
-	LibLocation     := $$(HOME)/usr/lib
-	else
-	LibLocation     := $$(HOME)/usr/lib/$$(DESTDIRCOMPILER)
-	endif
+# This is a "template", acting like a function.
+# It will add to the CFLAGS and LDFLAGS the right path to a library.
+# To use, include a similar line in the main Makefile:
+# $(eval $(call Flags_template,stdcout,StdCout.hpp),ssh://optimusprime.selfip.net/git/nicolas/stdcout.git)
+define Flags_template
+$(1)_include_home      := $(HOME)/usr/include
+$(1)_include_home_name := $(HOME)/usr/include/$(1)
+$(1)_include_usr       := /usr/include
+$(1)_include_usr_name  := /usr/include/$(1)
+$(1)_lib_home          := $(HOME)/usr/lib
+$(1)_lib_home_name     := $(HOME)/usr/lib/$(1)
+$(1)_lib_usr           := /usr/lib
+$(1)_lib_usr_name      := /usr/lib/$(1)
 
-	### Check if the location exist. If not, try the /usr directoy
-	ifeq ($$(wildcard $$(LibLocation)/lib$$(LibName).*),)
-	LibIncludes     := /usr/include/$$(LibName)
-	ifeq ($$(DESTDIRCOMPILER),gcc)
-	LibLocation     := /usr/lib
-	else
-	LibLocation     := /usr/lib/$$(DESTDIRCOMPILER)
-	endif
-	endif
+ifneq ($$(wildcard $$($(1)_include_home)/$(2)),)
+    $(1)_Include     := $$($(1)_include_home)
+else
+    ifneq ($$(wildcard $$($(1)_include_home_name)/$(2)),)
+        $(1)_Include     := $$($(1)_include_home_name)
+    else
+        ifneq ($$(wildcard $$($(1)_include_usr)/$(2)),)
+            $(1)_Include     := $$($(1)_include_usr)
+        else
+            ifneq ($$(wildcard $$($(1)_include_usr_name)/$(2)),)
+                $(1)_Include     := $$($(1)_include_usr_name)
+            else
+                $$(error Couldn't find header $(2) in either $$($(1)_include_home), $$($(1)_include_home_name), $$($(1)_include_usr) or $$($(1)_include_usr_name)! Get it at $(3))
+            endif
+        endif
+    endif
+endif
 
-	### If library is not found, bail out!
-	ifeq ($$(wildcard $$(LibLocation)/lib$$(LibName).*),)
-	$$(error ERROR: $$(LibName) could not be found in "$$(LibLocation)"! Please install it from $(2))
-	endif
+ifneq ($$(wildcard $$($(1)_lib_home)/lib$(1).so),)
+    $(1)_LibDir := $$($(1)_lib_home)
+else
+    ifneq ($$(wildcard $$($(1)_lib_home_name)/lib$(1).so),)
+        $(1)_LibDir:= $$($(1)_lib_home_name)
+    else
+        ifneq ($$(wildcard $$($(1)_lib_usr)/lib$(1).so),)
+            $(1)_LibDir:= $$($(1)_lib_usr)
+        else
+            ifneq ($$(wildcard $$($(1)_lib_usr_name)/lib$(1).so),)
+                $(1)_LibDir:= $$($(1)_lib_usr_name)
+            else
+                $$(error Couldn't find library lib$(1).so in either $$($(1)_lib_home), $$($(1)_lib_home_name), $$($(1)_lib_usr) or $$($(1)_lib_usr_name)! Get it at $(3))
+            endif
+        endif
+    endif
+endif
 
-	### Add library flags
-	CFLAGS          += -I$$(LibIncludes)
-	ifeq ($$(LINK_PREFERED),shared)
-	LDFLAGS         += -L$$(LibLocation) -l$$(LibName) $$(RPATH)$$(LibLocation)
-	else # static
-	LDFLAGS         += $$(LibLocation)/lib$$(LibName).a
-	endif
+CFLAGS          += -I$$($(1)_Include)
+LDFLAGS         += -L$$($(1)_LibDir) -l$(1)
+ifneq ($(RPATH),)
+LDFLAGS         += $(RPATH)$$($(1)_LibDir)
+endif
+
 endef
 
 #################################################################
