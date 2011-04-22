@@ -27,8 +27,8 @@ build_dir        = build
 
 HEADERS          = $(wildcard $(addsuffix *.$(HEADEXT),$(addsuffix /, $(SRCDIRS)) ) )
 
-HPCVL_MACHINES   = sflogin0 xenakis
-SHARCNET_MACHINES= bul124 narwhal305 bul narwhal wha hnd bal
+HPCVL_MACHINES   = sflogin xenakis
+SHARCNET_MACHINES= bul narwhal wha hnd bal
 
 #################################################################
 # Force printing of help if just "make" is called
@@ -100,7 +100,12 @@ endif
 ifneq ($(filter ocl, $(MAKECMDGOALS) ),)
     USE_OPENCL       = "yes"
     CFLAGS          += -DGPGPU_OPENCL
-    LDFLAGS         += -lOpenCL
+    ifeq ($(os), Darwin)
+        #CFLAGS      += -I"/Developer/GPU Computing/OpenCL/common/inc"
+        LDFLAGS     += -framework OpenCL
+    else
+        LDFLAGS     += -lOpenCL
+    endif
 endif
 #################################################################
 
@@ -117,6 +122,10 @@ OBJ              = $(addprefix $(build_dir)/,$(addsuffix .o, $(BASENAMES) ) )
 
 INCLUDES         = $(addprefix -I./, $(SRCDIRS) )
 LDFLAGS         += -L./$(build_dir)
+
+ifeq ($(os), Darwin)
+CFLAGS          += -DMACOSX
+endif
 
 #################################################################
 # This is a "template", acting like a function.
@@ -179,10 +188,22 @@ define LDFLAGS_template
             endif
         endif
     endif
-    LDFLAGS     += -L$$($(1)_LibDir) -l$(1)
-    ifneq ($(RPATH),)
-        LDFLAGS += $(RPATH)$$($(1)_LibDir)
-    endif
+
+   ifeq ($$(os),Darwin)
+       MyLibs += $$($(1)_LibDir)/lib$(1).a
+       #MyLibs += -framework $(1)
+       #MyLibs_Path += -F$$($(1)_LibDir) $(RPATH)$$($(1)_LibDir)
+   else
+        ifeq ($(LINK_PREFERED),static)
+             MyLibs += $$($(1)_LibDir)/lib$(1).a
+        else  # ifeq ($(LINK_PREFERED),static)
+            ifeq ($(LINK_PREFERED),shared)
+                MyLibs += -L$$($(1)_LibDir) $(RPATH)$$($(1)_LibDir) -l$(1)
+            else  # ifeq ($(LINK_PREFERED),shared)
+                $$(error Please define LINK_PREFERED=static or LINK_PREFERED=shared in main Makefile, before the "include makefiles/Makefile.rules" directive.)
+            endif # ifeq ($(LINK_PREFERED),shared)
+        endif # ifeq ($(LINK_PREFERED),static)
+   endif
 endef
 
 #################################################################
@@ -194,6 +215,16 @@ define Flags_template
 $(eval $(call CFLAGS_template,$(1),$(2),$(3)))
 $(eval $(call LDFLAGS_template,$(1),$(2),$(3)))
 endef
+
+ifneq ($(LD_LIBRARY_PATH),)
+ifeq ($(LINK_PREFERED),shared)
+# Make sure the resulting binary will know the exact path of the shared libraries.
+LD_LIBRARY_PATHs = $(subst :, ,$(LD_LIBRARY_PATH) )
+ifneq ($(RPATH),)
+LDFLAGS += $(strip $(sort $(addprefix $(RPATH), $(LD_LIBRARY_PATHs))))
+endif
+endif
+endif
 
 #################################################################
 # Tools
@@ -222,12 +253,12 @@ endif
 ifneq ($(INPUT),)
 INPUT_ARGUMENT  = --input $(INPUT)
 endif
+ifneq ($(ARGS),)
+OTHER_ARGUMENT  = $(ARGS)
+endif
 #################################################################
 
-LINK_PREFERED    = shared
-# Link statically on clusters
 ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
-LINK_PREFERED    = static
 GREP            := ggrep
 SED             := gsed
 endif
@@ -242,6 +273,7 @@ all: $(BIN)
 o: $(OBJ)
 
 # Git revision is saved in src/Version.cpp. Only used for Git.
+#GIT_BRANCH := $(shell $(GIT) branch --no-color| $(GREP) "*" | $(SED) "s|* ||g")
 #.PHONE: version
 #version: src/Version.cpp
 #src/Version.cpp: force
@@ -284,14 +316,15 @@ $(BIN): $(OBJ) cb
 	# ################################################################
 	# Linking...
 	# ################################################################
-	$(LD) $(OBJ) -o $(BIN) $(LDFLAGS)
+	$(LD) $(strip $(CFLAGS) $(OBJ) -o $(BIN) $(LDFLAGS) $(sort $(MyLibs_Path)) $(MyLibs)
 
 # Compilation of source files, depends on ALL headers
 $(build_dir)/%.o : %.$(SRCEXT) $(HEADERS)
-	$(COMPILER) $(strip $(CFLAGS) $(INCLUDES)) -c $< -o $@
+	$(COMPILER) $(strip $(sort $(CFLAGS) ) $(INCLUDES) -c $< -o $@ )
 
 .PHONY: variables
 variables:
+	# LIB:           $(LIB)
 	# BIN:           $(BIN)
 	# OBJ:           $(OBJ)
 	#
@@ -345,22 +378,22 @@ distclean: clean_bin clean_obj clean_data clean_doc
 .PHONY: r run
 r: run
 run: $(BIN)
-	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) 2>&1 | tee output/make_run.log
+	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT) 2>&1 | tee output/make_run.log
 
 # Run the parallel program
 .PHONY: p rp pr
 rp: p
 pr: p
 p:
-	mpirun -np $(NP) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	mpirun -np $(NP) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 pk:
-	mpirun -np $(NP) $(CONSOLE) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	mpirun -np $(NP) $(CONSOLE) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 pkd:
-	mpirun -np $(NP) $(CONSOLE) $(DEBUGGER) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	mpirun -np $(NP) $(CONSOLE) $(DEBUGGER) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 pkv:
-	mpirun -np $(NP) $(CONSOLE) $(VALGRIND) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	mpirun -np $(NP) $(CONSOLE) $(VALGRIND) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 
-# Count the number of lines of project, without tinyxml files
+# Count the number of lines of project
 .PHONY: count
 count:
 	wc -l $(addsuffix /*, $(SRCDIRS))
@@ -371,23 +404,29 @@ doc: doxygen
 doxygen:
 	doxygen
 
+# Run cppcheck on source code
+.PHONY: cppcheck check
+check: cppcheck
+cppcheck: force
+	cppcheck --enable=all $(SRCDIRS)
+
 # Run through valgrind for errors
 .PHONY: valgrind v vv
 v: valgrind
 valgrind: $(BIN)
-	$(MEMCHECK) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	$(MEMCHECK) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 vv: $(BIN)
-	$(MEMCHECK) --verbose ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	$(MEMCHECK) --verbose ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 .PHONY: cachegrind cg
 cg: cachegrind
 cachegrind: $(BIN)
-	$(CACHEGRIND) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	$(CACHEGRIND) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 
 # Run through gdb for debugging
 .PHONY: g gdb
 g: gdb
 gdb: $(BIN)
-	$(DEBUGGER) $(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT)
+	$(DEBUGGER) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT)
 
 #################################################################
 # Target depending on the binary. Necessary for the previous
@@ -405,7 +444,7 @@ omp: $(BIN)
 optimized: $(BIN)
 ocl: $(BIN)
 endif
-dg: force
+ds: force
 
 # Force target
 .PHONY: force
