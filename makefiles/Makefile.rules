@@ -316,7 +316,7 @@ $(BIN): $(OBJ) cb
 	# ################################################################
 	# Linking...
 	# ################################################################
-	$(LD) $(strip $(CFLAGS) $(OBJ) -o $(BIN) $(LDFLAGS) $(sort $(MyLibs_Path)) $(MyLibs)
+	$(LD) $(strip $(CFLAGS) $(OBJ) -o $(BIN) $(LDFLAGS) $(sort $(MyLibs_Path)) $(MyLibs) )
 
 # Compilation of source files, depends on ALL headers
 $(build_dir)/%.o : %.$(SRCEXT) $(HEADERS)
