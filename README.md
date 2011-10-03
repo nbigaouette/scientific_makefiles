@@ -62,7 +62,7 @@ Other options are supported:
 * clean_dat/cd: Just clean (delete) the output folder **output/**;
 * distclean/d: Clean everything;
 * run/r: Run the program (after compilation), piping output to **output/make_run.log**. _softlimit_ from daemontools (http://cr.yp.to/daemontools.html) is needed as it will prevent program to take more then 500 MB of RAM;
-* p/pk/pkv/pkd: Run the program (after compilation) through _mpirun_. Set **NP** to choose number of processes (_make pk NP=5_ for example) The _k_ version will launch terminal windows (see makefiles/Makefile.rules line 233 for setting which terminal). The _v_ version runs through valgrind, the _g_ version through gdb;
+* p/pk/pkv/pkd: Run the program (after compilation) through _mpirun_. Set **NP** to choose number of processes (for example: _make pk NP=5_) The _k_ version will launch terminal windows (see makefiles/Makefile.rules line 233 for setting which terminal). The _v_ version runs through valgrind, the _g_ version through gdb;
 * count: Count the number of lines of the project;
 * cppcheck/check: Run cppcheck on the project;
 * valgrind/v/vv: Run program through valgrind. _vv_ version makes valgrind more verbose;
