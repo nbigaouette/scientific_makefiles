@@ -27,7 +27,7 @@ To build a library instead of an executable, uncomment line 34 and change "LIB" 
 Usage
 -------------------------
 All different options can be called at once as "make" targets. A minimum option to use is the compiler, for example:
-`$ make gcc`
+    $ make gcc
 to build with gcc/g++.
 
 Other options can be mixed.
@@ -70,5 +70,5 @@ Other options are supported:
 * gdb/g: Run program through gdb, the GNU Debugger;
 
 Options can be used together. For example:
-`make clean clean_data gcc optimized ds ocl omp r`
-will clean the objects, clean the data (be careful...), compiled an optimized OpenMP and OpenCL build with debug symbols using gcc, then run it.
+    make clean clean_data gcc optimized ds ocl omp r
+will clean the objects, clean the data (be careful...), compile an optimized OpenMP and OpenCL build with debug symbols using gcc, then run it.
