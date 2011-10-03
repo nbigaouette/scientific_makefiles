@@ -30,13 +30,6 @@ include makefiles/Makefile.rules
 CFLAGS          +=
 LDFLAGS         +=
 
-# To include a library:
-# $(eval $(call Flags_template,stdcout,StdCout.hpp,ssh://optimusprime.selfip.net/git/nicolas/stdcout.git))
-# Or just the header(s):
-# $(eval $(call CFLAGS_template,stdcout,StdCout.hpp,ssh://optimusprime.selfip.net/git/nicolas/stdcout.git))
-# Or just the library:
-# $(eval $(call LDFLAGS_template,stdcout,StdCout.hpp,ssh://optimusprime.selfip.net/git/nicolas/stdcout.git))
-
 # Include the library stuff
 # include makefiles/Makefile.library
 
