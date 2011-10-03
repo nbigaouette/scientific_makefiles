@@ -20,6 +20,7 @@ endif
 	@echo "    optimized    Optimized build"
 	@echo "    mpi          MPI"
 	@echo "    omp          OpenMP"
+	@echo "    ocl          OpenCL"
 	@echo "    ds           Include debugging symbols"
 	@echo "    prof         Profiling (gcc only)"
 	@echo "    cov          Coverage (gcc only)"
