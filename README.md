@@ -70,5 +70,7 @@ Other options are supported:
 * gdb/g: Run program through gdb, the GNU Debugger;
 
 Options can be used together. For example:
+
     make clean clean_data gcc optimized ds ocl omp r
+
 will clean the objects, clean the data (be careful...), compile an optimized OpenMP and OpenCL build with debug symbols using gcc, then run it.
