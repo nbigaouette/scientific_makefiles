@@ -33,7 +33,7 @@ to build with gcc/g++.
 Other options can be mixed.
 
 
-Compilers
+Supported Compilers
 -----------------
 Different compilers supported:
 
@@ -45,7 +45,7 @@ Different compilers supported:
 * sun studioX: Sun's Studio compiler set (where X is 7, 11 or 12);
 * sharcnet: Use "cc" or "CC" on Sharcnet to choose the best compiler per cluster.
 
-Other options
+Other Options
 -----------------
 Other options are supported:
 
