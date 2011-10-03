@@ -33,7 +33,7 @@ ifneq ($(filter optimized, $(MAKECMDGOALS) ),)
 endif
 #################################################################
 # MPI location
-MPILOC          := /usr/lib/intel/openmpi/bin/
+#MPILOC          := /usr/lib/intel/openmpi/bin/
 
 #################################################################
 # FLAGS that should appear, whatever the compilation options
