@@ -8,6 +8,9 @@
 #include <vector>
 #include <stdint.h> // uint64_t
 
+#include "Version.hpp"
+#include "Git_Diff.hpp"
+
 // **************************************************************
 int main(int argc, char *argv[])
 {
@@ -25,6 +28,8 @@ int main(int argc, char *argv[])
     std::cout << "sizeof(std::vector<uint64_t>::size_type) = " << sizeof(std::vector<uint64_t>::size_type) << std::endl;
     std::cout << "sizeof(std::vector<double>::size_type) = " << sizeof(std::vector<double>::size_type) << std::endl;
     std::cout << "sizeof(std::vector<float>::size_type) = " << sizeof(std::vector<float>::size_type) << std::endl;
+
+    Log_Git_Info(std::string("output/"));
 
     return EXIT_SUCCESS;
 }
