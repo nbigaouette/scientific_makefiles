@@ -7,10 +7,10 @@ A set of makefiles useful for writting and running scientific C or C++ code.
 
 Features
 -------------------------
- * Can be used to compile libraries or full programs;
- * Will create object files in build/ as to not clutter the current directory;
- * Will compile automatically every .c/.cpp files located in src/ (or any other files which extensiosn is set);
- * Will save git's commit id and git's diff from HEAD as to know what have changed.
+* Can be used to compile libraries or full programs;
+* Will create object files in build/ as to not clutter the current directory;
+* Will compile automatically every .c/.cpp files located in src/ (or any other files which extensiosn is set);
+* Will save git's commit id and git's diff from HEAD as to know what have changed.
 
 First time usage
 -------------------------
