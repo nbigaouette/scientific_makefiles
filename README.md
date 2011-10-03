@@ -10,7 +10,8 @@ Features
 * Can be used to compile libraries or full programs;
 * Will create object files in build/ as to not clutter the current directory;
 * Will compile automatically every .c/.cpp files located in src/ (or any other files which extensiosn is set);
-* Will save git's commit id and git's diff from HEAD as to know what have changed.
+* Will save git's commit id and git's diff from HEAD as to know what have changed;
+* Can run program after compilation.
 
 First time usage
 -------------------------
@@ -27,7 +28,9 @@ To build a library instead of an executable, uncomment line 34 and change "LIB" 
 Usage
 -------------------------
 All different options can be called at once as "make" targets. A minimum option to use is the compiler, for example:
+
     $ make gcc
+
 to build with gcc/g++.
 
 Other options can be mixed.
