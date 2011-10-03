@@ -1,4 +1,4 @@
-Scientific Makfiles
+Scientific Makefiles
 ================================
 
 Content
