@@ -269,19 +269,40 @@ b: all
 l: all
 all: $(BIN)
 
+# Add Git_Diff.o to the objects, but only if it's not alreay present.
+ifeq (,$(filter $(OBJ), $(build_dir)/Git_Diff.o ))
+OBJ += $(build_dir)/Git_Diff.o
+endif
+ifeq (,$(filter $(OBJ), $(build_dir)/Version.o ))
+OBJ += $(build_dir)/Version.o
+endif
+
 .PHONY: o
 o: $(OBJ)
 
 # Git revision is saved in src/Version.cpp. Only used for Git.
-#GIT_BRANCH := $(shell $(GIT) branch --no-color| $(GREP) "*" | $(SED) "s|* ||g")
-#.PHONE: version
-#version: src/Version.cpp
-#src/Version.cpp: force
-#	echo "#include \"Version.hpp\"" > src/Version.cpp
-#	echo "const char *build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
-#	echo "const char *build_branch = \"$(GIT_BRANCH)\";" >> src/Version.cpp
-#	echo "const char *build_time = \"`date`\";" >> src/Version.cpp
-# Git revision is saved in src/Version.cpp. Only used for Git.
+GIT_BRANCH := $(shell $(GIT) branch --no-color| $(GREP) "*" | $(SED) "s|* ||g")
+.PHONY: version
+version: src/Version.cpp
+src/Version.cpp: force
+	echo "#include \"Version.hpp\"" > src/Version.cpp
+	echo "const char *git_build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
+	echo "const char *git_build_branch = \"$(GIT_BRANCH)\";" >> src/Version.cpp
+	echo "const char *git_build_time = \"`date`\";" >> src/Version.cpp
+	echo "const char *git_log_stat = \"`$(GIT) log --stat HEAD^..HEAD | sed -e 's|\\"|\\\\"|g' | sed -e '$$ ! s|$$| \\\\n\\\\|g'`\";" >> src/Version.cpp
+
+# Keep differences of changes
+.PHONY: diff
+diff: src/Git_Diff.cpp
+src/Git_Diff.cpp: force
+	git diff > src/Git_Diff.patch
+	xxd -i src/Git_Diff.patch src/Git_Diff.tmp
+	echo "#include \"Git_Diff.hpp\"" > src/Git_Diff.cpp
+	cat src/Git_Diff.tmp >> src/Git_Diff.cpp
+	sed -e "s|unsigned|const unsigned|g" -i src/Git_Diff.cpp
+	[[ "`wc -l src/Git_Diff.cpp`" == "3 src/Git_Diff.cpp" ]] && sed -e 's|{|"";|g' -i src/Git_Diff.cpp || :
+	rm -f src/Git_Diff.tmp
+	rm -f src/Git_Diff.patch
 
 #################################################################
 # Call "make test" for building test suite
