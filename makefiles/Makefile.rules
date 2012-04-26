@@ -3,6 +3,8 @@
 # Nicolas Bigaouette, July 2008
 #################################################################
 
+SHELL = /bin/bash
+
 host=$(shell uname -n)
 arch=$(shell uname -m)
 os=$(shell uname)
@@ -24,11 +26,25 @@ empty:=
 space:= $(empty) $(empty)
 
 build_dir        = build
+ifneq ($(filter ocl, $(MAKECMDGOALS) ),)
+build_dir       := $(build_dir)_ocl
+endif
+ifneq ($(filter omp, $(MAKECMDGOALS) ),)
+build_dir       := $(build_dir)_omp
+endif
+ifneq ($(filter mpi, $(MAKECMDGOALS) ),)
+build_dir       := $(build_dir)_mpi
+endif
+output_dir       = output
 
 HEADERS          = $(wildcard $(addsuffix *.$(HEADEXT),$(addsuffix /, $(SRCDIRS)) ) )
 
 HPCVL_MACHINES   = sflogin xenakis
 SHARCNET_MACHINES= bul narwhal wha hnd bal
+
+GCC_MAJOR       := $(shell gcc -dumpversion | cut -d'.' -f1)
+GCC_MINOR       := $(shell gcc -dumpversion | cut -d'.' -f2)
+GCC_REV         := $(shell gcc -dumpversion | cut -d'.' -f3)
 
 #################################################################
 # Force printing of help if just "make" is called
@@ -45,7 +61,7 @@ ifneq ($(filter gcc, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.gcc
 endif
 #################################################################
-# Call "make gcc" for building using LLVM's Clang (clang or clang++)
+# Call "make clang" for building using LLVM's Clang (clang or clang++)
 ifneq ($(filter clang, $(MAKECMDGOALS) ),)
     include makefiles/Makefile.clang
 endif
@@ -189,21 +205,29 @@ define LDFLAGS_template
         endif
     endif
 
-   ifeq ($$(os),Darwin)
-       MyLibs += $$($(1)_LibDir)/lib$(1).a
-       #MyLibs += -framework $(1)
-       #MyLibs_Path += -F$$($(1)_LibDir) $(RPATH)$$($(1)_LibDir)
-   else
-        ifeq ($(LINK_PREFERED),static)
-             MyLibs += $$($(1)_LibDir)/lib$(1).a
-        else  # ifeq ($(LINK_PREFERED),static)
-            ifeq ($(LINK_PREFERED),shared)
-                MyLibs += -L$$($(1)_LibDir) $(RPATH)$$($(1)_LibDir) -l$(1)
-            else  # ifeq ($(LINK_PREFERED),shared)
-                $$(error Please define LINK_PREFERED=static or LINK_PREFERED=shared in main Makefile, before the "include makefiles/Makefile.rules" directive.)
-            endif # ifeq ($(LINK_PREFERED),shared)
-        endif # ifeq ($(LINK_PREFERED),static)
-   endif
+    ifeq ($(LIB),)
+        ifeq ($$(os),Darwin)
+            MyLibs += $$($(1)_LibDir)/lib$(1).a
+            MyLibs += -framework $(1)
+            MyLibs_Path += -F$$($(1)_LibDir) $(RPATH)$$($(1)_LibDir)
+        else
+            ifeq ($(LINK_PREFERED),static)
+	        MyLibs += $$($(1)_LibDir)/lib$(1).a
+            else  # ifeq ($(LINK_PREFERED),static)
+                ifeq ($(LINK_PREFERED),shared)
+                    MyLibs += -L$$($(1)_LibDir) $(RPATH)$$($(1)_LibDir) -l$(1)
+                else  # ifeq ($(LINK_PREFERED),shared)
+                    $$(error Please define LINK_PREFERED=static or LINK_PREFERED=shared in main Makefile, before the "include makefiles/Makefile.rules" directive.)
+                endif # ifeq ($(LINK_PREFERED),shared)
+            endif # ifeq ($(LINK_PREFERED),static)
+        endif
+    else
+        ifeq ($$(os),Darwin)
+            MyLibs += $$($(1)_LibDir)/lib$(1).a
+        else
+	    MyLibs += $$($(1)_LibDir)/lib$(1).a
+        endif
+    endif
 endef
 
 #################################################################
@@ -238,9 +262,11 @@ DEBUGGER         = gdb --quiet --args
 VALGRIND         = valgrind
 MEMCHECK         = $(VALGRIND) --tool=memcheck --leak-check=full --show-reachable=yes
 CACHEGRIND       = $(VALGRIND) --tool=callgrind
-GIT              = git
-GREP             = grep
-SED              = sed
+GIT              = $(shell which git)
+GREP             = $(shell which grep)
+SED              = $(shell which sed)
+ECHO             = $(shell which echo)
+CAT              = $(shell which cat)
 ifeq ($(NP),)
 ifneq ($(np),)
 NP=$(np)
@@ -259,8 +285,8 @@ endif
 #################################################################
 
 ifneq (,$(filter $(host), $(HPCVL_MACHINES) ))
-GREP            := ggrep
-SED             := gsed
+GREP            := $(shell which ggrep)
+SED             := $(shell which gsed)
 endif
 
 .PHONY: a b l all
@@ -269,44 +295,56 @@ b: all
 l: all
 all: $(BIN)
 
-# Add Git_Diff.o to the objects, but only if it's not alreay present.
-ifeq (,$(filter $(OBJ), $(build_dir)/Git_Diff.o ))
-OBJ += $(build_dir)/Git_Diff.o
-endif
-ifeq (,$(filter $(OBJ), $(build_dir)/Version.o ))
-OBJ += $(build_dir)/Version.o
+$(build_dir):
+	mkdir -p $(build_dir)
+	touch $(build_dir)/.kdev_ignore
+	echo "*" > $(build_dir)/.gitignore
+
+$(output_dir):
+	mkdir -p $(output_dir)
+	touch $(output_dir)/.kdev_ignore
+	echo "*" > $(output_dir)/.gitignore
+
+
+# Add Git_Info.o to the objects, but only if it's not alreay present.
+ifeq (,$(filter $(OBJ), $(build_dir)/Git_Info.o ))
+OBJ += $(build_dir)/Git_Info.o
 endif
 
 .PHONY: o
 o: $(OBJ)
 
-# Git revision is saved in src/Version.cpp. Only used for Git.
+# Git info is saved in src/Git_Info.cpp. Only used for Git.
 GIT_BRANCH := $(shell $(GIT) branch --no-color| $(GREP) "*" | $(SED) "s|* ||g")
-.PHONY: version
-version: src/Version.cpp
-src/Version.cpp: force
-	echo "#include \"Version.hpp\"" > src/Version.cpp
-	echo "const char *git_build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Version.cpp
-	echo "const char *git_build_branch = \"$(GIT_BRANCH)\";" >> src/Version.cpp
-	echo "const char *git_build_time = \"`date`\";" >> src/Version.cpp
-	echo "const char *git_log_stat = \"`$(GIT) log --stat HEAD^..HEAD | sed -e 's|\\"|\\\\"|g' | sed -e '$$ ! s|$$| \\\\n\\\\|g'`\";" >> src/Version.cpp
-
-# Keep differences of changes
-.PHONY: diff
-diff: src/Git_Diff.cpp
-src/Git_Diff.cpp: force
+.PHONY: git_info
+git_info: src/Git_Info.cpp
+src/Git_Info.cpp: force
+	$(ECHO) "#include <iostream>" > src/Git_Info.cpp
+	$(ECHO) "#include <fstream>" >> src/Git_Info.cpp
+	$(ECHO) "#include <string>" >> src/Git_Info.cpp
+	$(ECHO) "#include \"Git_Info.hpp\"" >> src/Git_Info.cpp
+	$(ECHO) -e "namespace $(BIN)\n{" >> src/Git_Info.cpp
+	$(ECHO) "    const char *git_build_sha = \"`$(GIT) rev-parse HEAD`\";" >> src/Git_Info.cpp
+	$(ECHO) "    const char *git_build_branch = \"$(GIT_BRANCH)\";" >> src/Git_Info.cpp
+	$(ECHO) "    const char *git_build_time = \"`date`\";" >> src/Git_Info.cpp
+	$(ECHO) "    const char *git_log_stat = \"`$(GIT) log --stat HEAD^..HEAD | $(SED) -e 's|\\"|\\\\"|g' | $(SED) -e '$$ ! s|$$| \\\\n\\\\|g'`\";" >> src/Git_Info.cpp
+ifeq ($(shell git diff | wc -l),0)
+	$(ECHO) "    const unsigned char src_Git_Diff_patch[] = {0x00};" >> src/Git_Info.cpp
+	$(ECHO) "    const unsigned int src_Git_Diff_patch_len = 1;" >> src/Git_Info.cpp
+else
 	git diff > src/Git_Diff.patch
 	xxd -i src/Git_Diff.patch src/Git_Diff.tmp
-	echo "#include \"Git_Diff.hpp\"" > src/Git_Diff.cpp
-	cat src/Git_Diff.tmp >> src/Git_Diff.cpp
-	sed -e "s|unsigned|const unsigned|g" -i src/Git_Diff.cpp
-	[[ "`wc -l src/Git_Diff.cpp`" == "3 src/Git_Diff.cpp" ]] && sed -e 's|{|"";|g' -i src/Git_Diff.cpp || :
+	$(SED) src/Git_Diff.tmp -e "s|unsigned|const unsigned|g" -e "s|^|    |g" >> src/Git_Info.cpp
 	rm -f src/Git_Diff.tmp
 	rm -f src/Git_Diff.patch
+endif
+	$(CAT) src/Git_Info.cpp_template >> src/Git_Info.cpp
+	$(SED) -e "s|REPLACEMEWITHLIBNAME|$(BIN)|g" -i src/Git_Info.cpp
+
+VPATH            = $(subst $(space),$(column),$(SRCDIRS) ):$(subst $(space),$(column),$(TESTDIRS) )
 
 #################################################################
 # Call "make test" for building test suite
-VPATH            = $(subst $(space),$(column),$(SRCDIRS) ):$(subst $(space),$(column),$(TESTDIRS) )
 TEST_SOURCES     = $(foreach DIR,$(TESTDIRS) .,$(wildcard $(DIR)/*.$(SRCEXT) ) )
 TEST_NAMES       = $(notdir $(subst .$(SRCEXT),,$(TEST_SOURCES) ) )
 TEST_OBJ         = $(addprefix $(build_dir)/,$(addsuffix .o, $(TEST_NAMES) ) )
@@ -323,6 +361,7 @@ CFLAGS          := $(CFLAGS) $(TEST_CFLAGS)
 LDFLAGS         := $(LDFLAGS) $(TEST_LDFLAGS)
 # Make sure Main.o does not appear in the objects files since the unit testing already contains a main()
 OBJ             := $(subst $(build_dir)/Main.o,,$(OBJ)) $(TEST_OBJ)
+UTF_ARGUMENT    := --log_level=test_suite --log_sink=stderr
 endif
 
 # Phony target for testing
@@ -332,6 +371,8 @@ test: testing
 testing: $(BIN)
 
 # Linking
+$(OBJ): | $(build_dir)
+$(BIN): | $(output_dir)
 $(BIN): clean_bin $(OBJ)
 	# ################################################################
 	# Linking...
@@ -371,7 +412,7 @@ clean_bin:
 .PHONY: co clean_obj
 co: clean_obj
 clean_obj:
-	$(RM) build/*
+	$(RM) build/* build_ocl/* build_omp/* build_mpi/*
 #   find . -iname "*.o" -exec $(RM) {} \;
 #   find . -iname "*.a" -exec $(RM) {} \;
 #   find . -iname "*.so" -exec $(RM) {} \;
@@ -398,7 +439,7 @@ distclean: clean_bin clean_obj clean_data clean_doc
 .PHONY: r run
 r: run
 run: $(BIN)
-	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT) 2>&1 | tee output/make_run.log
+	$(SOFTLIMIT) ./$(BIN) $(NAME_ARGUMENT) $(INPUT_ARGUMENT) $(OTHER_ARGUMENT) $(UTF_ARGUMENT) 2>&1 | tee output/make_run.log
 
 # Run the parallel program
 .PHONY: p rp pr
@@ -451,7 +492,7 @@ gdb: $(BIN)
 #################################################################
 # Target depending on the binary. Necessary for the previous
 # lines "ifneq ($(filter ..." to work.
-.PHONY: mpi omp optimized dg ocl
+.PHONY: mpi omp optimized ds ocl
 # Don't build a binary if what we are building is a library
 ifneq ($(LIB),)
 mpi: force
